@@ -26,7 +26,9 @@
     }
 
     function writeJson(key, value) {
-        try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {}
     }
 
     function getDrawMode() {
@@ -177,7 +179,6 @@
 
                 if (isDrawn(product)) continue;
                 if (skippedUrls[product.url]) continue;
-                if (!hasStarted(product)) continue;
 
                 var isStarred = window.Favorites ? (window.Favorites.isFavItem(product.url) || window.Favorites.isFavItem(product.id)) : false;
 
@@ -186,10 +187,9 @@
                     continue;
                 }
 
-                var priority = 0;
-                if (mode === "fav-first" || mode === "fav-only") {
-                    priority = isStarred ? 1 : 0;
-                }
+                var isStarted = hasStarted(product);
+                var favScore = isStarred ? 10 : 0;
+                var startScore = isStarted ? 1 : 0;
 
                 candidates.push({
                     store: store,
@@ -197,7 +197,8 @@
                     storeIndex: s,
                     productIndex: p,
                     isStarred: isStarred,
-                    priority: priority,
+                    isStarted: isStarted,
+                    priority: favScore + startScore,
                     order: candidates.length
                 });
             }
@@ -206,10 +207,22 @@
         if (!candidates.length) return null;
 
         if (mode === "fav-first" || mode === "fav-only") {
-            // 依星號最愛優先度排序 (1 > 0)，相同者依預設順序
+            // 依優先度由高至低排序：
+            // 1. 已加星且已開始 (11)
+            // 2. 已加星但未開始 (10)
+            // 3. 未加星且已開始 (1)
+            // 4. 未加星且未開始 (0)
             candidates.sort(function (a, b) {
                 if (b.priority !== a.priority) {
                     return b.priority - a.priority;
+                }
+                return a.order - b.order;
+            });
+        } else {
+            // 全部依序：已開始優先，其次未開始，維持原本順序
+            candidates.sort(function (a, b) {
+                if (b.isStarted !== a.isStarted) {
+                    return (b.isStarted ? 1 : 0) - (a.isStarted ? 1 : 0);
                 }
                 return a.order - b.order;
             });
@@ -263,8 +276,8 @@
                     storeEl.textContent = "若要抽選其他項目，請切換至「🌟 優先抽我的最愛」或「📋 全部依序」";
                 }
             } else {
-                progress.innerHTML = "🎉 目前沒有已開始且尚未抽取的項目 <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽紀錄重新抽</button>";
-                storeEl.textContent = "之後開始的項目會在開始時間到達後自動加入連續抽選";
+                progress.innerHTML = "🎉 所有門市抽獎項目均已抽選完成！ <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽紀錄重新抽</button>";
+                storeEl.textContent = "您可以點擊上方重設按鈕重新連續抽選";
             }
             productEl.textContent = "";
             open.disabled = true;
@@ -274,9 +287,16 @@
         }
 
         // 標籤提示
-        var badgeHtml = candidate.isStarred ? '<span class="draw-tag-badge badge-fav-both">⭐ 我的最愛</span>' : '';
+        var badges = [];
+        if (candidate.isStarred) {
+            badges.push('<span class="draw-tag-badge badge-fav-both">⭐ 我的最愛</span>');
+        }
+        if (!candidate.isStarted) {
+            badges.push('<span class="draw-tag-badge" style="background:#fed7aa;color:#c2410c;">⏳ 預定時間開抽</span>');
+        }
+        var badgeHtml = badges.join(" ");
 
-        progress.innerHTML = "門市進度：第 " + (candidate.storeIndex + 1) + " / " + list.length + " 家" + badgeHtml + " <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽</button>";
+        progress.innerHTML = "門市進度：第 " + (candidate.storeIndex + 1) + " / " + list.length + " 家 " + badgeHtml + " <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽</button>";
         storeEl.textContent = candidate.store.city + " · " + candidate.store.name + "　（" + candidate.store.products.length + " 個商品）";
         productEl.textContent = candidate.product.product;
 
@@ -294,22 +314,11 @@
 
     function openCurrent() {
         if (!currentItem || !currentItem.product) return;
-
-        if (!hasStarted(currentItem.product)) {
-            render();
-            return;
-        }
-
         window.open(currentItem.product.url, "_blank");
     }
 
     function completeAndOpenNext() {
         if (!currentItem || !currentItem.product) {
-            render();
-            return;
-        }
-
-        if (!hasStarted(currentItem.product)) {
             render();
             return;
         }
