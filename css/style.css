@@ -31,6 +31,7 @@ body {
     padding: 15px;
     color: var(--text-main);
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
 }
 
 /* 標題與副標題 */
@@ -55,6 +56,7 @@ p.subtitle {
     color: var(--primary);
     margin: 12px 0 6px;
     font-weight: 800;
+    word-break: break-word;
 }
 
 /* 頂部導航分頁 Tabs */
@@ -186,6 +188,7 @@ p.subtitle {
     color: var(--text-main);
     margin: 8px 0 16px;
     word-break: break-word;
+    overflow-wrap: anywhere;
     background: #f8f9fc;
     padding: 12px 14px;
     border-radius: var(--radius-sm);
@@ -565,7 +568,7 @@ p.subtitle {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     padding: 9px 0;
     border-top: 1px solid var(--border-light);
 }
@@ -574,6 +577,8 @@ p.subtitle {
     font-size: 14px;
     color: #2d3748;
     line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 .draw-item-left {
@@ -581,6 +586,7 @@ p.subtitle {
     align-items: center;
     gap: 8px;
     flex: 1;
+    min-width: 0;
 }
 
 /* 星號收藏按鈕 */
@@ -589,10 +595,12 @@ p.subtitle {
     border: none;
     cursor: pointer;
     font-size: 18px;
-    padding: 2px 6px;
+    padding: 2px 4px;
     color: #cbd5e1;
     transition: color 0.15s ease, transform 0.15s ease;
     user-select: none;
+    flex-shrink: 0;
+    line-height: 1;
 }
 
 .star-btn:hover {
@@ -609,11 +617,12 @@ p.subtitle {
     color: white;
     text-decoration: none;
     font-weight: bold;
-    padding: 7px 14px;
+    padding: 7px 12px;
     border-radius: var(--radius-sm);
     font-size: 12px;
     white-space: nowrap;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .draw-link:hover {
@@ -636,30 +645,117 @@ p.subtitle {
     text-decoration: line-through;
 }
 
-/* 響應式優化 */
+/* ===== 行動裝置與小螢幕 RWD 極致適配 ===== */
 @media (max-width: 600px) {
     body {
         padding: 10px 8px;
     }
     
     .draw-main-title {
-        font-size: 22px;
+        font-size: 20px;
+        margin: 8px 0 4px;
     }
 
-    .continuous-draw-panel,
-    .filter-control-box {
-        padding: 14px;
+    .page-tabs {
+        margin: 6px auto 14px;
+        gap: 6px;
+    }
+
+    .page-tab {
+        padding: 7px 16px;
+        font-size: 13px;
+    }
+
+    .continuous-draw-guide {
+        padding: 10px 12px;
+        font-size: 12px;
+        line-height: 1.6;
+        margin: 8px auto 12px;
+    }
+
+    .continuous-draw-panel {
+        padding: 14px 12px;
+        margin: 10px auto 16px;
+        border-radius: var(--radius-md);
+    }
+
+    .continuous-draw-title {
+        font-size: 18px;
+        margin-bottom: 8px;
+    }
+
+    .draw-mode-selector {
+        gap: 5px;
+        margin-bottom: 12px;
+    }
+
+    .draw-mode-btn {
+        padding: 5px 9px;
+        font-size: 12px;
     }
 
     .continuous-draw-product {
-        font-size: 17px;
-        padding: 10px;
+        font-size: 16px;
+        padding: 10px 8px;
+        margin: 6px 0 12px;
     }
 
     .continuous-draw-actions {
         grid-template-columns: 1fr 1fr;
+        gap: 8px;
     }
-    
+
+    .continuous-draw-open,
+    .continuous-draw-next,
+    .continuous-draw-skip {
+        padding: 10px 6px;
+        font-size: 14px;
+    }
+
+    .filter-control-box {
+        padding: 12px 10px;
+        margin: 0 auto 16px;
+        border-radius: var(--radius-md);
+    }
+
+    .search-input {
+        padding: 8px 34px 8px 12px;
+        font-size: 13px;
+    }
+
+    .draw-filter-btn-group,
+    .filter-btn-group {
+        gap: 5px;
+    }
+
+    .filter-btn {
+        padding: 5px 9px;
+        font-size: 11px;
+    }
+
+    .draw-store {
+        padding: 12px 10px;
+        margin-bottom: 10px;
+    }
+
+    .draw-store-name {
+        font-size: 15px;
+    }
+
+    .draw-item {
+        padding: 7px 0;
+        gap: 6px;
+    }
+
+    .draw-product {
+        font-size: 13px;
+    }
+
+    .draw-link {
+        padding: 6px 9px;
+        font-size: 11px;
+    }
+
     .grid {
         grid-template-columns: 1fr;
     }
