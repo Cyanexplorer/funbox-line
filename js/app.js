@@ -93,7 +93,7 @@
 
                     listHtml += '<div class="draw-item" data-draw-id="' + itemId + '" data-draw-url="' + item.link + '">';
                     listHtml += '<div class="draw-item-left">';
-                    listHtml += '<button class="star-btn' + starClass + '" title="點擊切換最愛收藏" onclick="App.toggleFavItem(\'' + item.link + '\', this)">★</button>';
+                    listHtml += '<button type="button" class="star-btn' + starClass + '" title="點擊切換最愛收藏" onclick="App.toggleFavItem(\'' + item.link + '\', this)">★</button>';
                     listHtml += '<div class="draw-product">' + item.product + '</div>';
                     listHtml += '</div>';
                     listHtml += '<a class="draw-link" href="' + item.link + '" id="' + itemId + '" onclick="App.markDrawVisited(\'' + itemId + '\')" rel="noopener" target="_blank">＋ 參加抽獎</a>';
@@ -322,10 +322,13 @@
     // 星號收藏項目點擊
     function toggleFavItem(url, starBtn) {
         if (window.Favorites) {
+            var willBeStarred = !window.Favorites.isFavItem(url);
+            if (willBeStarred && window.ContinuousDraw) {
+                window.ContinuousDraw.unmarkDrawn(url);
+            }
             window.Favorites.toggleItem(url);
             if (starBtn) {
-                var isStarred = window.Favorites.isFavItem(url);
-                starBtn.classList.toggle("active", isStarred);
+                starBtn.classList.toggle("active", willBeStarred);
             }
         }
     }

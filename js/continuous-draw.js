@@ -52,6 +52,31 @@
         syncDrawnRows();
     }
 
+    function unmarkDrawn(url) {
+        if (!url) return;
+        var map = drawnMap();
+        delete map[url];
+        writeJson(DRAWN_KEY, map);
+
+        // 同時清除 visited_draw_links
+        var visited = readJson("visited_draw_links", []);
+        var idx = visited.indexOf(url);
+        if (idx > -1) {
+            visited.splice(idx, 1);
+            writeJson("visited_draw_links", visited);
+        }
+
+        syncDrawnRows();
+    }
+
+    function resetDrawn() {
+        localStorage.removeItem(DRAWN_KEY);
+        localStorage.removeItem("visited_draw_links");
+        skippedUrls = {};
+        syncDrawnRows();
+        render();
+    }
+
     function isDrawn(product) {
         if (!product || !product.url) return false;
         return !!drawnMap()[product.url];
@@ -68,6 +93,7 @@
                 if (linkEl) linkEl.classList.add("clicked");
             } else {
                 itemEl.classList.remove("quick-drawn");
+                if (linkEl) linkEl.classList.remove("clicked");
             }
         });
     }
@@ -129,20 +155,7 @@
     }
 
     function filteredStores() {
-        if (currentCity === "all") return stores;
-        if (currentCity === "fav") {
-            return stores.filter(function (store) {
-                if (window.Favorites) {
-                    for (var i = 0; i < store.products.length; i++) {
-                        if (window.Favorites.isFavItem(store.products[i].url) ||
-                            window.Favorites.isFavItem(store.products[i].id)) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            });
-        }
+        if (currentCity === "all" || currentCity === "fav") return stores;
         return stores.filter(function (store) {
             return store.city === currentCity;
         });
@@ -241,16 +254,16 @@
 
         if (!candidate) {
             if (currentMode === "fav-only") {
-                var hasAnyFav = window.Favorites && window.Favorites.count() > 0;
-                if (!hasAnyFav) {
+                var favCount = window.Favorites ? window.Favorites.count() : 0;
+                if (favCount === 0) {
                     progress.textContent = "⭐ 目前尚未加入任何最愛項目";
                     storeEl.textContent = "請在下方清單中點擊 ★ 加入最愛，將自動在此處優先抽選！";
                 } else {
-                    progress.textContent = "🎉 所有標記 ⭐ 的最愛項目均已抽選完成！";
+                    progress.innerHTML = "🎉 您標記的 " + favCount + " 個最愛項目均已抽選完成！ <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽紀錄重新抽</button>";
                     storeEl.textContent = "若要抽選其他項目，請切換至「🌟 優先抽我的最愛」或「📋 全部依序」";
                 }
             } else {
-                progress.textContent = "🎉 目前沒有已開始且尚未抽取的項目";
+                progress.innerHTML = "🎉 目前沒有已開始且尚未抽取的項目 <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽紀錄重新抽</button>";
                 storeEl.textContent = "之後開始的項目會在開始時間到達後自動加入連續抽選";
             }
             productEl.textContent = "";
@@ -263,7 +276,7 @@
         // 標籤提示
         var badgeHtml = candidate.isStarred ? '<span class="draw-tag-badge badge-fav-both">⭐ 我的最愛</span>' : '';
 
-        progress.innerHTML = "門市進度：第 " + (candidate.storeIndex + 1) + " / " + list.length + " 家" + badgeHtml;
+        progress.innerHTML = "門市進度：第 " + (candidate.storeIndex + 1) + " / " + list.length + " 家" + badgeHtml + " <button type=\"button\" class=\"btn-reset-drawn\" onclick=\"ContinuousDraw.resetDrawn()\">🔄 重設已抽</button>";
         storeEl.textContent = candidate.store.city + " · " + candidate.store.name + "　（" + candidate.store.products.length + " 個商品）";
         productEl.textContent = candidate.product.product;
 
@@ -363,6 +376,8 @@
         getDrawMode: getDrawMode,
         syncDrawnRows: syncDrawnRows,
         markDrawn: markDrawn,
+        unmarkDrawn: unmarkDrawn,
+        resetDrawn: resetDrawn,
         refreshStores: function () {
             stores = loadStores();
             render();
