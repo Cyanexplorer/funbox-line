@@ -1,0 +1,734 @@
+/* ===== Funbox LINE 抽選工具 統一樣式表 ===== */
+
+:root {
+    --primary: #1f497d;
+    --primary-light: #2d63a4;
+    --primary-dark: #153359;
+    --line-green: #00c300;
+    --line-green-hover: #00aa00;
+    --accent-orange: #d35400;
+    --star-gold: #f39c12;
+    --bg-main: #f4f6f9;
+    --bg-card: #ffffff;
+    --text-main: #222222;
+    --text-muted: #666666;
+    --border-light: #e6e9ee;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 2px 5px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--bg-main);
+    margin: 0;
+    padding: 15px;
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+/* 標題與副標題 */
+h1 {
+    text-align: center;
+    font-size: 22px;
+    color: var(--primary);
+    margin: 10px 0 6px;
+    font-weight: 800;
+}
+
+p.subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+}
+
+.draw-main-title {
+    text-align: center;
+    font-size: 26px;
+    color: var(--primary);
+    margin: 12px 0 6px;
+    font-weight: 800;
+}
+
+/* 頂部導航分頁 Tabs */
+.page-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px auto 18px;
+    flex-wrap: wrap;
+}
+
+.page-tab {
+    padding: 9px 20px;
+    border: 0;
+    border-radius: 20px;
+    background: #e0e0e0;
+    color: #444;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-tab:hover {
+    background: #d0d0d0;
+}
+
+.page-tab.active {
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 6px rgba(31, 73, 125, 0.3);
+}
+
+/* 地區與最愛篩選按鈕群 */
+.filter-btn-group,
+.draw-filter-btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.filter-btn {
+    padding: 7px 14px;
+    border: none;
+    background: #e5e8ec;
+    color: #333;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+    background: #d8dde3;
+}
+
+.filter-btn.active {
+    background: var(--line-green);
+    color: white;
+    font-weight: bold;
+}
+
+.filter-btn.fav-filter-btn {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.filter-btn.fav-filter-btn.active {
+    background: var(--star-gold);
+    color: white;
+    border-color: var(--star-gold);
+}
+
+/* 操作說明導引區塊 */
+.continuous-draw-guide {
+    max-width: 720px;
+    margin: 10px auto 16px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background: #ffffff;
+    color: #444;
+    font-size: 13px;
+    line-height: 1.7;
+    text-align: left;
+    box-shadow: var(--shadow-sm);
+    border-left: 4px solid var(--primary);
+}
+
+.continuous-draw-guide strong {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 14px;
+    color: var(--primary);
+}
+
+/* ===== 連續抽選面板 ===== */
+.continuous-draw-panel {
+    max-width: 720px;
+    margin: 16px auto 24px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
+    text-align: center;
+}
+
+.continuous-draw-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* 抽選模式選擇列 */
+.draw-mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.draw-mode-btn {
+    padding: 6px 13px;
+    font-size: 13px;
+    border-radius: 16px;
+    border: 1px solid #d0d7de;
+    background: #f8fafc;
+    color: #444;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.draw-mode-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.draw-mode-btn.mode-fav.active {
+    background: #e67e22;
+    border-color: #e67e22;
+}
+
+.continuous-draw-progress {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+
+.continuous-draw-store {
+    font-size: 15px;
+    color: var(--primary-light);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.continuous-draw-product {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin: 8px 0 16px;
+    word-break: break-word;
+    background: #f8f9fc;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px dashed #cbd5e1;
+}
+
+.draw-tag-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.badge-fav-product {
+    background: #ffeaa7;
+    color: #d35400;
+}
+
+.badge-fav-region {
+    background: #dff9fb;
+    color: #0984e3;
+}
+
+.badge-fav-both {
+    background: #ff7675;
+    color: white;
+}
+
+/* 連續抽選操作按鈕 */
+.continuous-draw-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.continuous-draw-open,
+.continuous-draw-next,
+.continuous-draw-skip {
+    border: 0;
+    border-radius: var(--radius-sm);
+    padding: 12px 10px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.continuous-draw-open {
+    grid-column: 1 / -1;
+    background: var(--line-green);
+    color: #fff;
+    font-size: 16px;
+}
+
+.continuous-draw-open:hover {
+    background: var(--line-green-hover);
+}
+
+.continuous-draw-next {
+    background: var(--primary);
+    color: #fff;
+}
+
+.continuous-draw-next:hover {
+    background: var(--primary-light);
+}
+
+.continuous-draw-skip {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+.continuous-draw-skip:hover {
+    background: #cbd5e1;
+}
+
+.continuous-draw-open:disabled,
+.continuous-draw-next:disabled,
+.continuous-draw-skip:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.continuous-draw-open:active:not(:disabled),
+.continuous-draw-next:active:not(:disabled),
+.continuous-draw-skip:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+/* 設定按鈕 */
+.btn-fav-settings {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+}
+
+.btn-fav-settings:hover {
+    background: #f8fafc;
+    border-color: var(--star-gold);
+    color: var(--star-gold);
+}
+
+/* ===== 加好友門市卡片網格 ===== */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-light);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.store-name {
+    font-size: 15px;
+    font-weight: bold;
+    margin: 2px 0;
+    color: var(--text-main);
+}
+
+.line-id {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.add-btn, .add-friend-btn {
+    background-color: var(--line-green);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    white-space: nowrap;
+    transition: background 0.2s;
+    display: inline-block;
+    text-align: center;
+}
+
+.add-btn:hover, .add-friend-btn:hover {
+    background-color: var(--line-green-hover);
+}
+
+.add-btn.clicked, .add-friend-btn.clicked {
+    background-color: #a0aec0 !important;
+}
+
+/* ===== 抽獎清單 ===== */
+.draw-list {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.draw-city {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary);
+    margin: 24px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.draw-store {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+}
+
+.draw-store-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.draw-store-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text-main);
+}
+
+.draw-start {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 10px;
+}
+
+.draw-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid var(--border-light);
+}
+
+.draw-product {
+    font-size: 14px;
+    color: #2d3748;
+    line-height: 1.4;
+}
+
+.draw-item-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+/* 星號收藏按鈕 */
+.star-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 2px 4px;
+    color: #cbd5e1;
+    transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.star-btn:hover {
+    transform: scale(1.2);
+    color: var(--star-gold);
+}
+
+.star-btn.active {
+    color: var(--star-gold);
+}
+
+.draw-link {
+    background: var(--line-green);
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.draw-link:hover {
+    background: var(--line-green-hover);
+}
+
+.draw-link.clicked {
+    background-color: #a0aec0 !important;
+    color: white !important;
+}
+
+.draw-item.quick-drawn .draw-link {
+    background: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    border-color: #cbd5e1 !important;
+}
+
+.draw-item.quick-drawn .draw-product {
+    color: #94a3b8;
+    text-decoration: line-through;
+}
+
+/* ===== 我的最愛設定彈窗 (Modal) ===== */
+.fav-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    padding: 16px;
+}
+
+.fav-modal-backdrop.show {
+    display: flex;
+}
+
+.fav-modal {
+    background: #ffffff;
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: modalFadeIn 0.2s ease;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.fav-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.fav-modal-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 0;
+}
+
+.fav-modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 0 6px;
+    line-height: 1;
+}
+
+.fav-modal-close:hover {
+    color: #334155;
+}
+
+.fav-modal-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.fav-section {
+    margin-bottom: 22px;
+}
+
+.fav-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.fav-section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.fav-section-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.fav-link-btn {
+    background: none;
+    border: none;
+    color: var(--primary-light);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.fav-chips-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.fav-chip {
+    padding: 6px 12px;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+}
+
+.fav-chip:hover {
+    background: #e2e8f0;
+}
+
+.fav-chip.selected {
+    background: #e67e22;
+    border-color: #d35400;
+    color: white;
+}
+
+.fav-modal-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-light);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #f8fafc;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 9px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background: var(--primary-light);
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #334155;
+    border: none;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+/* 響應式優化 */
+@media (max-width: 600px) {
+    body {
+        padding: 10px 8px;
+    }
+    
+    .draw-main-title {
+        font-size: 22px;
+    }
+
+    .continuous-draw-panel {
+        padding: 14px;
+    }
+
+    .continuous-draw-product {
+        font-size: 17px;
+        padding: 10px;
+    }
+
+    .continuous-draw-actions {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
