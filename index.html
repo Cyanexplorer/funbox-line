@@ -27,8 +27,9 @@
         <div class="continuous-draw-guide">
             <strong>連續抽選模式操作方式</strong>
             1. 點擊「⚙️ 設定我的最愛」可勾選偏好的地區（如台北市、新北市）與品相型號（如 UX-11 衝擊龍神、UX-20 等）。<br/>
-            2. 選擇抽選模式（「🌟 優先抽我的最愛」、「🎯 只抽我的最愛」或「📋 全部依序」）。<br/>
-            3. 按「開啟抽選」先抽第一個，抽完後只要按「完成並開啟下一個」即可持續抽選！
+            2. 可在下方「地區與品相篩選」挑選特定品相或輸入關鍵字。<br/>
+            3. 選擇抽選模式（「🌟 優先抽我的最愛」、「🎯 只抽我的最愛」或「📋 全部依序」）。<br/>
+            4. 按「開啟抽選」先抽第一個，抽完後只要按「完成並開啟下一個」即可持續抽選！
         </div>
 
         <!-- 連續抽選面板 -->
@@ -56,8 +57,32 @@
             </div>
         </div>
 
-        <!-- 地區篩選按鈕列 -->
-        <div class="draw-filter-btn-group" id="drawFilterBtnGroup"></div>
+        <!-- 綜合篩選控制箱 (地區 + 商品型號 + 關鍵字搜尋) -->
+        <div class="filter-control-box">
+            <!-- 搜尋框 -->
+            <div class="search-input-wrapper">
+                <input type="text" class="search-input" id="drawSearchInput" placeholder="🔍 輸入商品名稱或門市關鍵字快速搜尋 (例: 龍神, 女武神, 台北地下街...)" />
+                <button type="button" class="search-clear-btn" id="searchClearBtn" title="清除搜尋">✕</button>
+            </div>
+
+            <!-- 地區篩選列 -->
+            <div class="filter-row">
+                <div class="filter-row-label">📍 地區篩選：</div>
+                <div class="draw-filter-btn-group" id="drawFilterBtnGroup"></div>
+            </div>
+
+            <!-- 商品品相篩選列 -->
+            <div class="filter-row">
+                <div class="filter-row-label">🎯 商品品相快速篩選：</div>
+                <div class="product-filter-btn-group" id="productFilterBtnGroup"></div>
+            </div>
+
+            <!-- 篩選狀態統計與重設 -->
+            <div class="filter-status-bar">
+                <div class="filter-status-text" id="filterStatusText">載入篩選中...</div>
+                <button type="button" class="btn-reset-filters" onclick="App.resetFilters()">重設所有篩選</button>
+            </div>
+        </div>
 
         <!-- 門市與商品抽選清單 -->
         <div class="draw-list" id="drawListContainer"></div>

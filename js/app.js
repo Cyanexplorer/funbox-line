@@ -1,6 +1,6 @@
 /**
  * Funbox LINE 抽選工具 主應用程式 (App Manager)
- * 負責動態渲染門市列表、抽選活動列表、分頁切換與篩選互動
+ * 負責動態渲染門市列表、抽選活動列表、分頁切換與多維度篩選互動（地區、商品型號、關鍵字搜尋）
  */
 (function (window) {
     "use strict";
@@ -8,6 +8,8 @@
     var currentTab = "draws"; // 'draws' | 'stores'
     var currentDrawRegion = "all";
     var currentStoreRegion = "all";
+    var currentProductFilter = "all";
+    var currentKeyword = "";
 
     function $id(id) { return document.getElementById(id); }
 
@@ -35,8 +37,6 @@
         // 渲染門市卡片
         var cardsHtml = "";
         STORE_FRIENDS_DATA.forEach(function (s) {
-            var isFav = window.Favorites && window.Favorites.isFavRegion(s.region);
-            var starActive = isFav ? " active" : "";
             cardsHtml += '<div class="card" data-region="' + s.region + '">' +
                 '<div class="card-info">' +
                 '<div class="store-name">' + s.name + '</div>' +
@@ -46,6 +46,24 @@
                 '</div>';
         });
         grid.innerHTML = cardsHtml;
+    }
+
+    // 渲染「商品型號快速篩選」按鈕列
+    function renderProductFilterBar() {
+        var productFilterGroup = $id("productFilterBtnGroup");
+        if (!productFilterGroup) return;
+
+        var popularTags = [
+            "UX-11", "UX-20", "UX-21", "UX-01", "UX-02", "UX-19",
+            "BX-57", "BX-40", "BX-51", "BX-50", "BX-35", "BX-25", "CX-18"
+        ];
+
+        var html = '<button class="filter-btn active" data-product="all" onclick="App.filterProduct(\'all\', this)">全部商品</button>';
+        popularTags.forEach(function (tag) {
+            html += '<button class="filter-btn" data-product="' + tag + '" onclick="App.filterProduct(\'' + tag + '\', this)">' + tag + '</button>';
+        });
+
+        productFilterGroup.innerHTML = html;
     }
 
     // 渲染「抽獎連結」清單區域
@@ -62,7 +80,7 @@
             cityStores[store.city].push(store);
         });
 
-        // 渲染抽獎頁篩選按鈕
+        // 渲染抽獎頁地區篩選按鈕
         if (filterGroup) {
             var filterHtml = '<button class="filter-btn active" data-region="all" onclick="App.filterDrawRegion(\'all\', this)">全部 (' + totalStores + ')</button>';
             filterHtml += '<button class="filter-btn fav-filter-btn" data-region="fav" onclick="App.filterDrawRegion(\'fav\', this)">⭐ 我的最愛</button>';
@@ -107,6 +125,33 @@
             listHtml += '</div>'; // end draw-city-group
         }
         container.innerHTML = listHtml;
+        renderProductFilterBar();
+        bindSearchInput();
+    }
+
+    // 關鍵字搜尋綁定
+    function bindSearchInput() {
+        var searchInput = $id("drawSearchInput");
+        var clearBtn = $id("searchClearBtn");
+        if (!searchInput) return;
+
+        searchInput.oninput = function () {
+            currentKeyword = this.value.trim().toLowerCase();
+            if (clearBtn) {
+                clearBtn.style.display = currentKeyword ? "flex" : "none";
+            }
+            applyFilters();
+        };
+
+        if (clearBtn) {
+            clearBtn.onclick = function () {
+                searchInput.value = "";
+                currentKeyword = "";
+                clearBtn.style.display = "none";
+                applyFilters();
+                searchInput.focus();
+            };
+        }
     }
 
     // 分頁切換
@@ -146,50 +191,119 @@
         });
         if (btnElement) btnElement.classList.add("active");
 
-        var isFavFilter = (region === "fav");
+        applyFilters();
+    }
+
+    // 商品型號篩選
+    function filterProduct(productTag, btnElement) {
+        currentProductFilter = productTag;
+        document.querySelectorAll("#productFilterBtnGroup .filter-btn").forEach(function (btn) {
+            btn.classList.remove("active");
+        });
+        if (btnElement) btnElement.classList.add("active");
+
+        applyFilters();
+    }
+
+    // 執行綜合過濾 (地區 + 商品型號 + 關鍵字)
+    function applyFilters() {
+        var isFavFilter = (currentDrawRegion === "fav");
+        var totalMatchedItems = 0;
+        var totalMatchedStores = 0;
 
         document.querySelectorAll("#page-draws .draw-city-group").forEach(function (group) {
             var city = group.getAttribute("data-draw-city-group");
+            var cityMatches = (currentDrawRegion === "all" || currentDrawRegion === "fav" || currentDrawRegion === city);
+            var isFavCity = window.Favorites && window.Favorites.isFavRegion(city);
+            var hasVisibleStoreInCity = false;
 
-            if (isFavFilter) {
-                // 檢查該縣市群組內是否有最愛商品或最愛地區
-                var isFavCity = window.Favorites && window.Favorites.isFavRegion(city);
-                var hasFavChild = false;
+            group.querySelectorAll(".draw-store").forEach(function (storeEl) {
+                var storeName = storeEl.querySelector(".draw-store-name") ? storeEl.querySelector(".draw-store-name").textContent : "";
+                var visibleItemCountInStore = 0;
 
-                group.querySelectorAll(".draw-store").forEach(function (storeEl) {
-                    var storeHasFav = isFavCity;
-                    storeEl.querySelectorAll(".draw-item").forEach(function (itemEl) {
-                        var url = itemEl.getAttribute("data-draw-url");
-                        var prodText = itemEl.querySelector(".draw-product") ? itemEl.querySelector(".draw-product").textContent : "";
+                storeEl.querySelectorAll(".draw-item").forEach(function (itemEl) {
+                    var url = itemEl.getAttribute("data-draw-url");
+                    var prodText = itemEl.querySelector(".draw-product") ? itemEl.querySelector(".draw-product").textContent : "";
+                    
+                    // 1. 地區與最愛判定
+                    var matchRegion = false;
+                    if (isFavFilter) {
                         var isItemFav = window.Favorites && (window.Favorites.isFavItem(url) || window.Favorites.isFavProduct(prodText));
-                        if (isItemFav || isFavCity) {
-                            itemEl.style.display = "";
-                            storeHasFav = true;
-                            hasFavChild = true;
-                        } else {
-                            itemEl.style.display = "none";
-                        }
-                    });
-                    storeEl.style.display = storeHasFav ? "" : "none";
+                        matchRegion = (isItemFav || isFavCity);
+                    } else {
+                        matchRegion = cityMatches;
+                    }
+
+                    // 2. 商品型號判定
+                    var matchProduct = (currentProductFilter === "all" || prodText.indexOf(currentProductFilter) > -1);
+
+                    // 3. 關鍵字搜尋判定
+                    var matchKeyword = true;
+                    if (currentKeyword) {
+                        var combinedText = (prodText + " " + storeName + " " + city).toLowerCase();
+                        matchKeyword = combinedText.indexOf(currentKeyword) > -1;
+                    }
+
+                    var itemVisible = (matchRegion && matchProduct && matchKeyword);
+                    if (itemVisible) {
+                        itemEl.style.display = "";
+                        visibleItemCountInStore++;
+                        totalMatchedItems++;
+                    } else {
+                        itemEl.style.display = "none";
+                    }
                 });
 
-                group.style.display = hasFavChild ? "" : "none";
-            } else {
-                // 一般縣市篩選，恢復項目顯示
-                group.querySelectorAll(".draw-store").forEach(function (s) {
-                    s.style.display = "";
-                });
-                group.querySelectorAll(".draw-item").forEach(function (it) {
-                    it.style.display = "";
-                });
-                group.style.display = (region === "all" || city === region) ? "" : "none";
-            }
+                if (visibleItemCountInStore > 0) {
+                    storeEl.style.display = "";
+                    hasVisibleStoreInCity = true;
+                    totalMatchedStores++;
+                } else {
+                    storeEl.style.display = "none";
+                }
+            });
+
+            group.style.display = hasVisibleStoreInCity ? "" : "none";
         });
 
-        // 同步通知連續抽選引擎更新目標縣市
+        // 更新狀態列
+        updateFilterStatusBar(totalMatchedStores, totalMatchedItems);
+
+        // 同步通知連續抽選引擎
         if (window.ContinuousDraw) {
-            window.ContinuousDraw.setCity(region);
+            window.ContinuousDraw.setFilters(currentDrawRegion, currentProductFilter, currentKeyword);
         }
+    }
+
+    function updateFilterStatusBar(matchedStores, matchedItems) {
+        var statusEl = $id("filterStatusText");
+        if (!statusEl) return;
+
+        var regionLabel = currentDrawRegion === "all" ? "全部" : (currentDrawRegion === "fav" ? "⭐ 我的最愛" : currentDrawRegion);
+        var productLabel = currentProductFilter === "all" ? "全部" : currentProductFilter;
+        var keywordLabel = currentKeyword ? (" ｜ 🔍 「" + currentKeyword + "」") : "";
+
+        statusEl.innerHTML = "📍 地區: <span class=\"highlight\">" + regionLabel + "</span> ｜ 🎯 品相: <span class=\"highlight\">" + productLabel + "</span>" + keywordLabel + " ｜ 共符合 <span class=\"highlight\">" + matchedStores + "</span> 間門市、<span class=\"highlight\">" + matchedItems + "</span> 個項目";
+    }
+
+    function resetFilters() {
+        currentDrawRegion = "all";
+        currentProductFilter = "all";
+        currentKeyword = "";
+
+        var searchInput = $id("drawSearchInput");
+        if (searchInput) searchInput.value = "";
+        var clearBtn = $id("searchClearBtn");
+        if (clearBtn) clearBtn.style.display = "none";
+
+        document.querySelectorAll("#drawFilterBtnGroup .filter-btn").forEach(function (btn) {
+            btn.classList.toggle("active", btn.getAttribute("data-region") === "all");
+        });
+        document.querySelectorAll("#productFilterBtnGroup .filter-btn").forEach(function (btn) {
+            btn.classList.toggle("active", btn.getAttribute("data-product") === "all");
+        });
+
+        applyFilters();
     }
 
     // 加好友門市區域篩選
@@ -264,10 +378,7 @@
         if (window.Favorites) {
             window.Favorites.initModal();
             window.Favorites.onChange(function () {
-                // 當最愛變更時，若目前正在「我的最愛」篩選分頁，重新觸發篩選
-                if (currentDrawRegion === "fav") {
-                    filterDrawRegion("fav", document.querySelector("#drawFilterBtnGroup .fav-filter-btn"));
-                }
+                applyFilters();
             });
         }
 
@@ -276,6 +387,7 @@
         }
 
         showPage("draws", document.querySelectorAll(".page-tab")[0]);
+        applyFilters();
     }
 
     // 暴露全域 API
@@ -283,7 +395,9 @@
         init: init,
         showPage: showPage,
         filterDrawRegion: filterDrawRegion,
+        filterProduct: filterProduct,
         filterStoreRegion: filterStoreRegion,
+        resetFilters: resetFilters,
         markStoreVisited: markStoreVisited,
         markDrawVisited: markDrawVisited,
         toggleFavItem: toggleFavItem

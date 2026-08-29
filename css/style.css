@@ -88,56 +88,9 @@ p.subtitle {
     box-shadow: 0 2px 6px rgba(31, 73, 125, 0.3);
 }
 
-/* 地區與最愛篩選按鈕群 */
-.filter-btn-group,
-.draw-filter-btn-group {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-    max-width: 1000px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.filter-btn {
-    padding: 7px 14px;
-    border: none;
-    background: #e5e8ec;
-    color: #333;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.filter-btn:hover {
-    background: #d8dde3;
-}
-
-.filter-btn.active {
-    background: var(--line-green);
-    color: white;
-    font-weight: bold;
-}
-
-.filter-btn.fav-filter-btn {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeeba;
-}
-
-.filter-btn.fav-filter-btn.active {
-    background: var(--star-gold);
-    color: white;
-    border-color: var(--star-gold);
-}
-
 /* 操作說明導引區塊 */
 .continuous-draw-guide {
-    max-width: 720px;
+    max-width: 800px;
     margin: 10px auto 16px;
     padding: 12px 16px;
     border-radius: var(--radius-md);
@@ -159,7 +112,7 @@ p.subtitle {
 
 /* ===== 連續抽選面板 ===== */
 .continuous-draw-panel {
-    max-width: 720px;
+    max-width: 800px;
     margin: 16px auto 24px;
     background: var(--bg-card);
     border-radius: var(--radius-lg);
@@ -348,6 +301,167 @@ p.subtitle {
     color: var(--star-gold);
 }
 
+/* ===== 綜合篩選控制箱 (Filter Control Box) ===== */
+.filter-control-box {
+    max-width: 1000px;
+    margin: 0 auto 20px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+}
+
+.filter-row {
+    margin-bottom: 14px;
+}
+
+.filter-row:last-child {
+    margin-bottom: 0;
+}
+
+.filter-row-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.filter-btn-group,
+.draw-filter-btn-group,
+.product-filter-btn-group {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 6px 12px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #334155;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.filter-btn:hover {
+    background: #edf2f7;
+    border-color: #cbd5e1;
+}
+
+.filter-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    font-weight: 700;
+}
+
+.filter-btn.fav-filter-btn {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+}
+
+.filter-btn.fav-filter-btn.active {
+    background: var(--star-gold);
+    color: white;
+    border-color: var(--star-gold);
+}
+
+/* 關鍵字搜尋列 */
+.search-input-wrapper {
+    position: relative;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 38px 10px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: #1e293b;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: #ffffff;
+}
+
+.search-input:focus {
+    border-color: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(45, 99, 164, 0.15);
+}
+
+.search-clear-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #e2e8f0;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    color: #64748b;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.search-clear-btn:hover {
+    background: #cbd5e1;
+    color: #1e293b;
+}
+
+/* 篩選狀態統計列 */
+.filter-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    font-size: 13px;
+    color: #64748b;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-status-text {
+    font-weight: 600;
+}
+
+.filter-status-text .highlight {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.btn-reset-filters {
+    background: none;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: #475569;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+
+.btn-reset-filters:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+
 /* ===== 加好友門市卡片網格 ===== */
 .grid {
     display: grid;
@@ -530,6 +644,16 @@ p.subtitle {
 .draw-item.quick-drawn .draw-product {
     color: #94a3b8;
     text-decoration: line-through;
+}
+
+.empty-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: #64748b;
+    font-size: 15px;
+    background: #ffffff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
 }
 
 /* ===== 我的最愛設定彈窗 (Modal) ===== */
@@ -715,7 +839,8 @@ p.subtitle {
         font-size: 22px;
     }
 
-    .continuous-draw-panel {
+    .continuous-draw-panel,
+    .filter-control-box {
         padding: 14px;
     }
 

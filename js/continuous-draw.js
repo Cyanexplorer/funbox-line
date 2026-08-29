@@ -1,6 +1,6 @@
 /**
  * Funbox 連續抽選引擎 (Continuous Draw Engine)
- * 支援「依商品開始時間自動判斷」與「我的最愛優先抽選排序」
+ * 支援「依商品開始時間自動判斷」、「地區/商品篩選聯動」與「我的最愛優先抽選排序」
  */
 (function (window) {
     "use strict";
@@ -8,6 +8,8 @@
     var DRAWN_KEY = "funbox_continuous_draw_v9_drawn";
     var stores = [];
     var currentCity = "all";
+    var currentProduct = "all";
+    var currentKeyword = "";
     var currentItem = null;
     var skippedUrls = {};
 
@@ -134,7 +136,6 @@
     function filteredStores() {
         if (currentCity === "all") return stores;
         if (currentCity === "fav") {
-            // 只保留屬於最愛地區或包含最愛商品的門市
             return stores.filter(function (store) {
                 if (window.Favorites && window.Favorites.isFavRegion(store.city)) return true;
                 if (window.Favorites) {
@@ -154,7 +155,7 @@
     }
 
     /**
-     * 尋找下一個候選抽獎項目 (支援最愛優先排序)
+     * 尋找下一個候選抽獎項目 (支援最愛優先排序與品相過濾)
      */
     function findNextItem() {
         var list = filteredStores();
@@ -170,6 +171,19 @@
                 if (isDrawn(product)) continue;
                 if (skippedUrls[product.url]) continue;
                 if (!hasStarted(product)) continue;
+
+                // 檢查是否符合商品品相篩選
+                if (currentProduct !== "all" && product.product.indexOf(currentProduct) === -1) {
+                    continue;
+                }
+
+                // 檢查關鍵字篩選
+                if (currentKeyword) {
+                    var combined = (product.product + " " + store.name + " " + store.city).toLowerCase();
+                    if (combined.indexOf(currentKeyword) === -1) {
+                        continue;
+                    }
+                }
 
                 var priority = 0;
                 if (window.Favorites) {
@@ -244,11 +258,11 @@
 
         if (!candidate) {
             if (currentMode === "fav-only") {
-                progress.textContent = "🎉 所有符合「我的最愛」的已開始項目均已抽選完成！";
+                progress.textContent = "🎉 所有符合篩選與「我的最愛」的已開始項目均已抽選完成！";
                 storeEl.textContent = "若要抽選其他項目，請切換至「優先抽選最愛」或「全部依序」";
             } else {
-                progress.textContent = "🎉 目前沒有已開始且尚未抽的抽選";
-                storeEl.textContent = "之後開始的項目會在開始時間到達後自動加入";
+                progress.textContent = "🎉 目前篩選條件下沒有尚未抽取的已開始項目";
+                storeEl.textContent = "您可以切換地區/品相篩選或等待開抽時間到達";
             }
             productEl.textContent = "";
             open.disabled = true;
@@ -277,8 +291,10 @@
         open.setAttribute("data-url", candidate.product.url);
     }
 
-    function setCityFromTopFilter(region) {
+    function setFilters(region, product, keyword) {
         currentCity = region || "all";
+        currentProduct = product || "all";
+        currentKeyword = keyword || "";
         skippedUrls = {};
         render();
     }
@@ -325,6 +341,8 @@
     function init() {
         stores = collectStores();
         currentCity = "all";
+        currentProduct = "all";
+        currentKeyword = "";
 
         syncDrawnRows();
         render();
@@ -360,7 +378,10 @@
     var ContinuousDraw = {
         init: init,
         render: render,
-        setCity: setCityFromTopFilter,
+        setFilters: setFilters,
+        setCity: function (region) {
+            setFilters(region, currentProduct, currentKeyword);
+        },
         syncDrawnRows: syncDrawnRows,
         markDrawn: markDrawn,
         refreshStores: function () {
