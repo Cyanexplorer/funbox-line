@@ -1,6 +1,6 @@
 /**
  * Funbox LINE 抽選工具 主應用程式 (App Manager)
- * 負責動態渲染門市列表、抽選活動列表、分頁切換與多維度篩選互動（地區、商品型號、關鍵字搜尋）
+ * 負責動態渲染門市列表、抽選活動列表、分頁切換與地區/關鍵字篩選互動
  */
 (function (window) {
     "use strict";
@@ -8,7 +8,6 @@
     var currentTab = "draws"; // 'draws' | 'stores'
     var currentDrawRegion = "all";
     var currentStoreRegion = "all";
-    var currentProductFilter = "all";
     var currentKeyword = "";
 
     function $id(id) { return document.getElementById(id); }
@@ -46,24 +45,6 @@
                 '</div>';
         });
         grid.innerHTML = cardsHtml;
-    }
-
-    // 渲染「商品型號快速篩選」按鈕列
-    function renderProductFilterBar() {
-        var productFilterGroup = $id("productFilterBtnGroup");
-        if (!productFilterGroup) return;
-
-        var popularTags = [
-            "UX-11", "UX-20", "UX-21", "UX-01", "UX-02", "UX-19",
-            "BX-57", "BX-40", "BX-51", "BX-50", "BX-35", "BX-25", "CX-18"
-        ];
-
-        var html = '<button class="filter-btn active" data-product="all" onclick="App.filterProduct(\'all\', this)">全部商品</button>';
-        popularTags.forEach(function (tag) {
-            html += '<button class="filter-btn" data-product="' + tag + '" onclick="App.filterProduct(\'' + tag + '\', this)">' + tag + '</button>';
-        });
-
-        productFilterGroup.innerHTML = html;
     }
 
     // 渲染「抽獎連結」清單區域
@@ -125,7 +106,6 @@
             listHtml += '</div>'; // end draw-city-group
         }
         container.innerHTML = listHtml;
-        renderProductFilterBar();
         bindSearchInput();
     }
 
@@ -194,18 +174,7 @@
         applyFilters();
     }
 
-    // 商品型號篩選
-    function filterProduct(productTag, btnElement) {
-        currentProductFilter = productTag;
-        document.querySelectorAll("#productFilterBtnGroup .filter-btn").forEach(function (btn) {
-            btn.classList.remove("active");
-        });
-        if (btnElement) btnElement.classList.add("active");
-
-        applyFilters();
-    }
-
-    // 執行綜合過濾 (地區 + 商品型號 + 關鍵字)
+    // 執行過濾 (地區 + 關鍵字)
     function applyFilters() {
         var isFavFilter = (currentDrawRegion === "fav");
         var totalMatchedItems = 0;
@@ -234,17 +203,14 @@
                         matchRegion = cityMatches;
                     }
 
-                    // 2. 商品型號判定
-                    var matchProduct = (currentProductFilter === "all" || prodText.indexOf(currentProductFilter) > -1);
-
-                    // 3. 關鍵字搜尋判定
+                    // 2. 關鍵字搜尋判定
                     var matchKeyword = true;
                     if (currentKeyword) {
                         var combinedText = (prodText + " " + storeName + " " + city).toLowerCase();
                         matchKeyword = combinedText.indexOf(currentKeyword) > -1;
                     }
 
-                    var itemVisible = (matchRegion && matchProduct && matchKeyword);
+                    var itemVisible = (matchRegion && matchKeyword);
                     if (itemVisible) {
                         itemEl.style.display = "";
                         visibleItemCountInStore++;
@@ -269,9 +235,9 @@
         // 更新狀態列
         updateFilterStatusBar(totalMatchedStores, totalMatchedItems);
 
-        // 同步通知連續抽選引擎
+        // 同步通知連續抽選引擎更新目標地區
         if (window.ContinuousDraw) {
-            window.ContinuousDraw.setFilters(currentDrawRegion, currentProductFilter, currentKeyword);
+            window.ContinuousDraw.setCity(currentDrawRegion);
         }
     }
 
@@ -280,15 +246,13 @@
         if (!statusEl) return;
 
         var regionLabel = currentDrawRegion === "all" ? "全部" : (currentDrawRegion === "fav" ? "⭐ 我的最愛" : currentDrawRegion);
-        var productLabel = currentProductFilter === "all" ? "全部" : currentProductFilter;
         var keywordLabel = currentKeyword ? (" ｜ 🔍 「" + currentKeyword + "」") : "";
 
-        statusEl.innerHTML = "📍 地區: <span class=\"highlight\">" + regionLabel + "</span> ｜ 🎯 品相: <span class=\"highlight\">" + productLabel + "</span>" + keywordLabel + " ｜ 共符合 <span class=\"highlight\">" + matchedStores + "</span> 間門市、<span class=\"highlight\">" + matchedItems + "</span> 個項目";
+        statusEl.innerHTML = "📍 目前地區: <span class=\"highlight\">" + regionLabel + "</span>" + keywordLabel + " ｜ 共符合 <span class=\"highlight\">" + matchedStores + "</span> 間門市、<span class=\"highlight\">" + matchedItems + "</span> 個項目";
     }
 
     function resetFilters() {
         currentDrawRegion = "all";
-        currentProductFilter = "all";
         currentKeyword = "";
 
         var searchInput = $id("drawSearchInput");
@@ -298,9 +262,6 @@
 
         document.querySelectorAll("#drawFilterBtnGroup .filter-btn").forEach(function (btn) {
             btn.classList.toggle("active", btn.getAttribute("data-region") === "all");
-        });
-        document.querySelectorAll("#productFilterBtnGroup .filter-btn").forEach(function (btn) {
-            btn.classList.toggle("active", btn.getAttribute("data-product") === "all");
         });
 
         applyFilters();
@@ -395,7 +356,6 @@
         init: init,
         showPage: showPage,
         filterDrawRegion: filterDrawRegion,
-        filterProduct: filterProduct,
         filterStoreRegion: filterStoreRegion,
         resetFilters: resetFilters,
         markStoreVisited: markStoreVisited,

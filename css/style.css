@@ -133,38 +133,6 @@ p.subtitle {
     gap: 8px;
 }
 
-/* 抽選模式選擇列 */
-.draw-mode-selector {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-}
-
-.draw-mode-btn {
-    padding: 6px 13px;
-    font-size: 13px;
-    border-radius: 16px;
-    border: 1px solid #d0d7de;
-    background: #f8fafc;
-    color: #444;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s ease;
-}
-
-.draw-mode-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.draw-mode-btn.mode-fav.active {
-    background: #e67e22;
-    border-color: #e67e22;
-}
-
 .continuous-draw-progress {
     font-size: 13px;
     color: var(--text-muted);
@@ -331,8 +299,7 @@ p.subtitle {
 }
 
 .filter-btn-group,
-.draw-filter-btn-group,
-.product-filter-btn-group {
+.draw-filter-btn-group {
     display: flex;
     gap: 7px;
     flex-wrap: wrap;
@@ -644,16 +611,6 @@ p.subtitle {
 .draw-item.quick-drawn .draw-product {
     color: #94a3b8;
     text-decoration: line-through;
-}
-
-.empty-results {
-    text-align: center;
-    padding: 40px 20px;
-    color: #64748b;
-    font-size: 15px;
-    background: #ffffff;
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
 }
 
 /* ===== 我的最愛設定彈窗 (Modal) ===== */
