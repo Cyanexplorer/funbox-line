@@ -1,7 +1,7 @@
 /**
  * Funbox 連續抽選引擎 (Continuous Draw Engine)
  * 支援「🌟 優先抽我的最愛」、「🎯 只抽我的最愛」與「📋 全部依序」三種模式
- * 直接依據清單就地標記的星號 (⭐) 進行最愛判斷
+ * 直接依據清單就地標記的星號 (⭐) 進行最愛判斷，資料驅動且即時響應
  */
 (function (window) {
     "use strict";
@@ -49,12 +49,7 @@
         map[product.url] = true;
         writeJson(DRAWN_KEY, map);
 
-        if (product.link) {
-            product.link.classList.add("clicked");
-        }
-        if (product.element) {
-            product.element.classList.add("quick-drawn");
-        }
+        syncDrawnRows();
     }
 
     function isDrawn(product) {
@@ -65,15 +60,15 @@
     function syncDrawnRows() {
         var map = drawnMap();
 
-        stores.forEach(function (store) {
-            store.products.forEach(function (product) {
-                if (map[product.url]) {
-                    if (product.element) product.element.classList.add("quick-drawn");
-                    if (product.link) product.link.classList.add("clicked");
-                } else {
-                    if (product.element) product.element.classList.remove("quick-drawn");
-                }
-            });
+        document.querySelectorAll("#page-draws .draw-item").forEach(function (itemEl) {
+            var url = itemEl.getAttribute("data-draw-url");
+            var linkEl = itemEl.querySelector(".draw-link");
+            if (url && map[url]) {
+                itemEl.classList.add("quick-drawn");
+                if (linkEl) linkEl.classList.add("clicked");
+            } else {
+                itemEl.classList.remove("quick-drawn");
+            }
         });
     }
 
@@ -113,39 +108,24 @@
         return !start || new Date() >= start;
     }
 
-    function collectStores() {
-        var result = [];
-
-        document.querySelectorAll("#page-draws .draw-store").forEach(function (storeEl) {
-            var city = storeEl.getAttribute("data-draw-city") || "未分類";
-            var nameEl = storeEl.querySelector(".draw-store-name");
-            var name = nameEl ? nameEl.textContent.trim() : "";
-            var products = [];
-
-            storeEl.querySelectorAll(".draw-item").forEach(function (itemEl) {
-                var productEl = itemEl.querySelector(".draw-product");
-                var linkEl = itemEl.querySelector(".draw-link");
-                if (!productEl || !linkEl || !linkEl.href) return;
-
-                products.push({
-                    product: productEl.textContent.trim(),
-                    url: linkEl.href,
-                    element: itemEl,
-                    link: linkEl
-                });
+    function loadStores() {
+        if (typeof DRAWS_DATA !== "undefined" && Array.isArray(DRAWS_DATA) && DRAWS_DATA.length > 0) {
+            return DRAWS_DATA.map(function (store) {
+                return {
+                    city: store.city,
+                    name: store.name,
+                    startTime: store.startTime,
+                    products: store.items.map(function (item) {
+                        return {
+                            id: item.id,
+                            product: item.product,
+                            url: item.link
+                        };
+                    })
+                };
             });
-
-            if (name && products.length) {
-                result.push({
-                    city: city,
-                    name: name,
-                    products: products,
-                    element: storeEl
-                });
-            }
-        });
-
-        return result;
+        }
+        return [];
     }
 
     function filteredStores() {
@@ -154,7 +134,8 @@
             return stores.filter(function (store) {
                 if (window.Favorites) {
                     for (var i = 0; i < store.products.length; i++) {
-                        if (window.Favorites.isFavItem(store.products[i].url)) {
+                        if (window.Favorites.isFavItem(store.products[i].url) ||
+                            window.Favorites.isFavItem(store.products[i].id)) {
                             return true;
                         }
                     }
@@ -185,7 +166,7 @@
                 if (skippedUrls[product.url]) continue;
                 if (!hasStarted(product)) continue;
 
-                var isStarred = window.Favorites ? window.Favorites.isFavItem(product.url) : false;
+                var isStarred = window.Favorites ? (window.Favorites.isFavItem(product.url) || window.Favorites.isFavItem(product.id)) : false;
 
                 // 若模式為「只抽我的最愛」，非加星項目直接略過
                 if (mode === "fav-only" && !isStarred) {
@@ -234,6 +215,10 @@
 
         if (!progress || !storeEl || !productEl || !open || !next) return;
 
+        if (!stores.length) {
+            stores = loadStores();
+        }
+
         var list = filteredStores();
         var candidate = findNextItem();
         var currentMode = getDrawMode();
@@ -245,7 +230,7 @@
         });
 
         if (!list.length) {
-            progress.textContent = "目前篩選條件下沒有抽選資料";
+            progress.textContent = "目前篩選條件下沒有抽選門市資料";
             storeEl.textContent = "";
             productEl.textContent = "";
             open.disabled = true;
@@ -256,8 +241,14 @@
 
         if (!candidate) {
             if (currentMode === "fav-only") {
-                progress.textContent = "🎉 所有標記 ⭐ 的最愛項目均已抽選完成！";
-                storeEl.textContent = "若要抽選其他項目，請切換至「🌟 優先抽我的最愛」或「📋 全部依序」";
+                var hasAnyFav = window.Favorites && window.Favorites.count() > 0;
+                if (!hasAnyFav) {
+                    progress.textContent = "⭐ 目前尚未加入任何最愛項目";
+                    storeEl.textContent = "請在下方清單中點擊 ★ 加入最愛，將自動在此處優先抽選！";
+                } else {
+                    progress.textContent = "🎉 所有標記 ⭐ 的最愛項目均已抽選完成！";
+                    storeEl.textContent = "若要抽選其他項目，請切換至「🌟 優先抽我的最愛」或「📋 全部依序」";
+                }
             } else {
                 progress.textContent = "🎉 目前沒有已開始且尚未抽取的項目";
                 storeEl.textContent = "之後開始的項目會在開始時間到達後自動加入連續抽選";
@@ -327,34 +318,40 @@
         render();
     }
 
+    var initialized = false;
+
     function init() {
-        stores = collectStores();
+        stores = loadStores();
         currentCity = "all";
 
         syncDrawnRows();
         render();
 
-        var openBtn = $id("continuousDrawOpen");
-        var nextBtn = $id("continuousDrawNext");
-        var skipBtn = $id("continuousDrawSkip");
+        if (!initialized) {
+            initialized = true;
 
-        if (openBtn) openBtn.onclick = openCurrent;
-        if (nextBtn) nextBtn.onclick = completeAndOpenNext;
-        if (skipBtn) skipBtn.onclick = skipCurrent;
+            var openBtn = $id("continuousDrawOpen");
+            var nextBtn = $id("continuousDrawNext");
+            var skipBtn = $id("continuousDrawSkip");
 
-        // 綁定連續抽選模式切換按鈕
-        document.querySelectorAll(".draw-mode-btn").forEach(function (btn) {
-            btn.onclick = function () {
-                var mode = btn.getAttribute("data-mode");
-                setDrawMode(mode);
-            };
-        });
+            if (openBtn) openBtn.onclick = openCurrent;
+            if (nextBtn) nextBtn.onclick = completeAndOpenNext;
+            if (skipBtn) skipBtn.onclick = skipCurrent;
 
-        // 監聽 Favorites 變更事件自動重繪
-        if (window.Favorites) {
-            window.Favorites.onChange(function () {
-                render();
+            // 綁定連續抽選模式切換按鈕
+            document.querySelectorAll(".draw-mode-btn").forEach(function (btn) {
+                btn.onclick = function () {
+                    var mode = btn.getAttribute("data-mode");
+                    setDrawMode(mode);
+                };
             });
+
+            // 監聽 Favorites 變更事件自動重繪
+            if (window.Favorites) {
+                window.Favorites.onChange(function () {
+                    render();
+                });
+            }
         }
     }
 
@@ -367,7 +364,7 @@
         syncDrawnRows: syncDrawnRows,
         markDrawn: markDrawn,
         refreshStores: function () {
-            stores = collectStores();
+            stores = loadStores();
             render();
         }
     };

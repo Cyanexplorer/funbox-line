@@ -22,6 +22,11 @@
         } catch (e) {}
     }
 
+    function normalizeKey(k) {
+        if (!k) return "";
+        return String(k).trim().replace(/\/$/, "");
+    }
+
     var listeners = [];
 
     var Favorites = {
@@ -29,11 +34,14 @@
             return readJson(ITEMS_KEY, {});
         },
         toggleItem: function (urlOrId) {
+            if (!urlOrId) return;
+            var key = normalizeKey(urlOrId);
             var items = this.getItems();
-            if (items[urlOrId]) {
+            if (items[key] || items[urlOrId]) {
+                delete items[key];
                 delete items[urlOrId];
             } else {
-                items[urlOrId] = true;
+                items[key] = true;
             }
             writeJson(ITEMS_KEY, items);
             this.notify();
@@ -41,7 +49,8 @@
         isFavItem: function (urlOrId) {
             if (!urlOrId) return false;
             var items = this.getItems();
-            return !!items[urlOrId];
+            var key = normalizeKey(urlOrId);
+            return !!(items[key] || items[urlOrId]);
         },
         count: function () {
             return Object.keys(this.getItems()).length;
