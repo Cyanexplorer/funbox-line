@@ -93,7 +93,7 @@
 
                     listHtml += '<div class="draw-item" data-draw-id="' + itemId + '" data-draw-url="' + item.link + '">';
                     listHtml += '<div class="draw-item-left">';
-                    listHtml += '<button class="star-btn' + starClass + '" title="收藏此項目" onclick="App.toggleFavItem(\'' + item.link + '\', this)">★</button>';
+                    listHtml += '<button class="star-btn' + starClass + '" title="點擊切換最愛收藏" onclick="App.toggleFavItem(\'' + item.link + '\', this)">★</button>';
                     listHtml += '<div class="draw-product">' + item.product + '</div>';
                     listHtml += '</div>';
                     listHtml += '<a class="draw-link" href="' + item.link + '" id="' + itemId + '" onclick="App.markDrawVisited(\'' + itemId + '\')" rel="noopener" target="_blank">＋ 參加抽獎</a>';
@@ -183,7 +183,6 @@
         document.querySelectorAll("#page-draws .draw-city-group").forEach(function (group) {
             var city = group.getAttribute("data-draw-city-group");
             var cityMatches = (currentDrawRegion === "all" || currentDrawRegion === "fav" || currentDrawRegion === city);
-            var isFavCity = window.Favorites && window.Favorites.isFavRegion(city);
             var hasVisibleStoreInCity = false;
 
             group.querySelectorAll(".draw-store").forEach(function (storeEl) {
@@ -197,8 +196,7 @@
                     // 1. 地區與最愛判定
                     var matchRegion = false;
                     if (isFavFilter) {
-                        var isItemFav = window.Favorites && (window.Favorites.isFavItem(url) || window.Favorites.isFavProduct(prodText));
-                        matchRegion = (isItemFav || isFavCity);
+                        matchRegion = window.Favorites && window.Favorites.isFavItem(url);
                     } else {
                         matchRegion = cityMatches;
                     }
@@ -248,7 +246,7 @@
         var regionLabel = currentDrawRegion === "all" ? "全部" : (currentDrawRegion === "fav" ? "⭐ 我的最愛" : currentDrawRegion);
         var keywordLabel = currentKeyword ? (" ｜ 🔍 「" + currentKeyword + "」") : "";
 
-        statusEl.innerHTML = "📍 目前地區: <span class=\"highlight\">" + regionLabel + "</span>" + keywordLabel + " ｜ 共符合 <span class=\"highlight\">" + matchedStores + "</span> 間門市、<span class=\"highlight\">" + matchedItems + "</span> 個項目";
+        statusEl.innerHTML = "📍 目前篩選: <span class=\"highlight\">" + regionLabel + "</span>" + keywordLabel + " ｜ 共符合 <span class=\"highlight\">" + matchedStores + "</span> 間門市、<span class=\"highlight\">" + matchedItems + "</span> 個項目";
     }
 
     function resetFilters() {
@@ -326,7 +324,8 @@
         if (window.Favorites) {
             window.Favorites.toggleItem(url);
             if (starBtn) {
-                starBtn.classList.toggle("active");
+                var isStarred = window.Favorites.isFavItem(url);
+                starBtn.classList.toggle("active", isStarred);
             }
         }
     }
@@ -337,7 +336,6 @@
         restoreVisitedStates();
 
         if (window.Favorites) {
-            window.Favorites.initModal();
             window.Favorites.onChange(function () {
                 applyFilters();
             });

@@ -26,8 +26,8 @@
         
         <div class="continuous-draw-guide">
             <strong>連續抽選模式操作方式</strong>
-            1. 點擊「⚙️ 設定我的最愛」可勾選偏好的地區（如台北市、新北市）與品相型號（如 UX-11 衝擊龍神、UX-20 等）。<br/>
-            2. 連續抽選會自動以您的「我的最愛」優先排序抽選！<br/>
+            1. 點擊清單項目旁的 ⭐ 可加入最愛；連續抽選會<strong>自動優先抽取您的最愛項目</strong>！<br/>
+            2. 可點擊下方「地區篩選」或輸入關鍵字聚焦特定縣市門市。<br/>
             3. 按「開啟抽選」先抽第一個，抽完後只要按「完成並開啟下一個」即可持續抽選！
         </div>
 
@@ -35,7 +35,6 @@
         <div class="continuous-draw-panel" id="continuousDrawPanel">
             <div class="continuous-draw-title">
                 <span>⚡ 連續抽選模式</span>
-                <button class="btn-fav-settings" id="btnOpenFavSettings">⚙️ 設定我的最愛</button>
             </div>
 
             <div class="continuous-draw-progress" id="continuousDrawProgress">載入中...</div>
@@ -59,7 +58,7 @@
 
             <!-- 地區篩選列 -->
             <div class="filter-row">
-                <div class="filter-row-label">📍 地區篩選：</div>
+                <div class="filter-row-label">📍 地區與最愛篩選：</div>
                 <div class="draw-filter-btn-group" id="drawFilterBtnGroup"></div>
             </div>
 
@@ -72,45 +71,6 @@
 
         <!-- 門市與商品抽選清單 -->
         <div class="draw-list" id="drawListContainer"></div>
-    </div>
-
-    <!-- 我的最愛設定彈窗 (Favorites Modal) -->
-    <div class="fav-modal-backdrop" id="favModalBackdrop">
-        <div class="fav-modal">
-            <div class="fav-modal-header">
-                <h3 class="fav-modal-title">⭐ 設定我的最愛 (優先抽選偏好)</h3>
-                <button class="fav-modal-close" id="favModalClose">&times;</button>
-            </div>
-            <div class="fav-modal-body">
-                <!-- 地區偏好 -->
-                <div class="fav-section">
-                    <div class="fav-section-header">
-                        <span class="fav-section-title">📍 喜愛地區（可複選，點擊選取）</span>
-                        <div class="fav-section-actions">
-                            <button type="button" class="fav-link-btn" id="btnSelectAllRegions">全選</button>
-                            <button type="button" class="fav-link-btn" id="btnClearAllRegions">清除</button>
-                        </div>
-                    </div>
-                    <div class="fav-chips-grid" id="favRegionChips"></div>
-                </div>
-
-                <!-- 商品型號偏好 -->
-                <div class="fav-section">
-                    <div class="fav-section-header">
-                        <span class="fav-section-title">🎯 喜愛商品型號 / 品相（可複選，點擊選取）</span>
-                        <div class="fav-section-actions">
-                            <button type="button" class="fav-link-btn" id="btnSelectAllProducts">全選</button>
-                            <button type="button" class="fav-link-btn" id="btnClearAllProducts">清除</button>
-                        </div>
-                    </div>
-                    <div class="fav-chips-grid" id="favProductChips"></div>
-                </div>
-            </div>
-            <div class="fav-modal-footer">
-                <button type="button" class="btn-secondary" onclick="Favorites.closeModal()">取消</button>
-                <button type="button" class="btn-primary" id="favModalSave">儲存設定</button>
-            </div>
-        </div>
     </div>
 
     <!-- 資料與邏輯模組 -->

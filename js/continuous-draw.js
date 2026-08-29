@@ -1,6 +1,6 @@
 /**
  * Funbox 連續抽選引擎 (Continuous Draw Engine)
- * 統一沿用「我的最愛」偏好設定，自動依照最愛品相與最愛地區優先排序抽選
+ * 自動優先抽取您加星標記的「我的最愛 (⭐)」項目，抽完後依序接續抽選
  */
 (function (window) {
     "use strict";
@@ -135,11 +135,9 @@
         if (currentCity === "all") return stores;
         if (currentCity === "fav") {
             return stores.filter(function (store) {
-                if (window.Favorites && window.Favorites.isFavRegion(store.city)) return true;
                 if (window.Favorites) {
                     for (var i = 0; i < store.products.length; i++) {
-                        if (window.Favorites.isFavProduct(store.products[i].product) ||
-                            window.Favorites.isFavItem(store.products[i].url)) {
+                        if (window.Favorites.isFavItem(store.products[i].url)) {
                             return true;
                         }
                     }
@@ -153,7 +151,7 @@
     }
 
     /**
-     * 尋找下一個候選抽獎項目（統一自動依照我的最愛優先度排序）
+     * 尋找下一個候選抽獎項目（有 ⭐ 加星的最愛項目最優先）
      */
     function findNextItem() {
         var list = filteredStores();
@@ -169,9 +167,10 @@
                 if (skippedUrls[product.url]) continue;
                 if (!hasStarted(product)) continue;
 
-                var priority = 0;
-                if (window.Favorites) {
-                    priority = window.Favorites.getPriorityScore(product.product, store.city, product.url);
+                // 若篩選為「⭐ 我的最愛」，且該項目未加星，則略過
+                var isStarred = window.Favorites ? window.Favorites.isFavItem(product.url) : false;
+                if (currentCity === "fav" && !isStarred) {
+                    continue;
                 }
 
                 candidates.push({
@@ -179,7 +178,8 @@
                     product: product,
                     storeIndex: s,
                     productIndex: p,
-                    priority: priority,
+                    isStarred: isStarred,
+                    priority: isStarred ? 1 : 0,
                     order: candidates.length
                 });
             }
@@ -187,7 +187,7 @@
 
         if (!candidates.length) return null;
 
-        // 依最愛優先度排序 (3 > 2 > 1 > 0)，優先度相同維持門市預設順序
+        // 依星號最愛優先度排序 (1 > 0)，相同者依預設順序
         candidates.sort(function (a, b) {
             if (b.priority !== a.priority) {
                 return b.priority - a.priority;
@@ -233,14 +233,7 @@
         }
 
         // 標籤提示
-        var badgeHtml = "";
-        if (candidate.priority === 3) {
-            badgeHtml = '<span class="draw-tag-badge badge-fav-both">⭐ 最愛品相 + 地區</span>';
-        } else if (candidate.priority === 2) {
-            badgeHtml = '<span class="draw-tag-badge badge-fav-product">⭐ 最愛品相</span>';
-        } else if (candidate.priority === 1) {
-            badgeHtml = '<span class="draw-tag-badge badge-fav-region">⭐ 最愛地區</span>';
-        }
+        var badgeHtml = candidate.isStarred ? '<span class="draw-tag-badge badge-fav-both">⭐ 我的最愛</span>' : '';
 
         progress.innerHTML = "門市進度：第 " + (candidate.storeIndex + 1) + " / " + list.length + " 家" + badgeHtml;
         storeEl.textContent = candidate.store.city + " · " + candidate.store.name + "　（" + candidate.store.products.length + " 個商品）";
