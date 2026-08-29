@@ -26,8 +26,8 @@
         
         <div class="continuous-draw-guide">
             <strong>連續抽選模式操作方式</strong>
-            1. 點擊清單項目旁的 ⭐ 可加入最愛；連續抽選會<strong>自動優先抽取您的最愛項目</strong>！<br/>
-            2. 可點擊下方「地區篩選」或輸入關鍵字聚焦特定縣市門市。<br/>
+            1. 點擊清單項目旁的 ⭐ 可標記最愛，並選擇下方抽選模式（「🌟 優先抽我的最愛」、「🎯 只抽我的最愛」或「📋 全部依序」）。<br/>
+            2. 亦可點擊下方「地區篩選」或輸入關鍵字聚焦特定縣市門市。<br/>
             3. 按「開啟抽選」先抽第一個，抽完後只要按「完成並開啟下一個」即可持續抽選！
         </div>
 
@@ -35,6 +35,13 @@
         <div class="continuous-draw-panel" id="continuousDrawPanel">
             <div class="continuous-draw-title">
                 <span>⚡ 連續抽選模式</span>
+            </div>
+
+            <!-- 模式選擇按鈕列 -->
+            <div class="draw-mode-selector">
+                <button type="button" class="draw-mode-btn mode-fav active" data-mode="fav-first" title="先抽有加星 ⭐ 的最愛項目，抽完後接續抽其餘項目">🌟 優先抽我的最愛</button>
+                <button type="button" class="draw-mode-btn mode-fav" data-mode="fav-only" title="僅抽選有加星 ⭐ 的最愛項目">🎯 只抽我的最愛</button>
+                <button type="button" class="draw-mode-btn" data-mode="all" title="按照門市原本順序依序抽選">📋 全部依序</button>
             </div>
 
             <div class="continuous-draw-progress" id="continuousDrawProgress">載入中...</div>

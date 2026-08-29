@@ -1,11 +1,14 @@
 /**
  * Funbox 連續抽選引擎 (Continuous Draw Engine)
- * 自動優先抽取您加星標記的「我的最愛 (⭐)」項目，抽完後依序接續抽選
+ * 支援「🌟 優先抽我的最愛」、「🎯 只抽我的最愛」與「📋 全部依序」三種模式
+ * 直接依據清單就地標記的星號 (⭐) 進行最愛判斷
  */
 (function (window) {
     "use strict";
 
     var DRAWN_KEY = "funbox_continuous_draw_v9_drawn";
+    var DRAW_MODE_KEY = "funbox_continuous_draw_mode_v1";
+
     var stores = [];
     var currentCity = "all";
     var currentItem = null;
@@ -13,17 +16,31 @@
 
     function $id(id) { return document.getElementById(id); }
 
-    function readJson(key) {
-        try { return JSON.parse(localStorage.getItem(key) || "{}"); }
-        catch (e) { return {}; }
+    function readJson(key, defaultVal) {
+        try {
+            var data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : defaultVal;
+        } catch (e) {
+            return defaultVal;
+        }
     }
 
     function writeJson(key, value) {
         try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
     }
 
+    function getDrawMode() {
+        return localStorage.getItem(DRAW_MODE_KEY) || "fav-first";
+    }
+
+    function setDrawMode(mode) {
+        localStorage.setItem(DRAW_MODE_KEY, mode);
+        skippedUrls = {};
+        render();
+    }
+
     function drawnMap() {
-        return readJson(DRAWN_KEY);
+        return readJson(DRAWN_KEY, {});
     }
 
     function markDrawn(product) {
@@ -151,10 +168,11 @@
     }
 
     /**
-     * 尋找下一個候選抽獎項目（有 ⭐ 加星的最愛項目最優先）
+     * 尋找下一個候選抽獎項目
      */
     function findNextItem() {
         var list = filteredStores();
+        var mode = getDrawMode();
         var candidates = [];
 
         for (var s = 0; s < list.length; s++) {
@@ -167,10 +185,16 @@
                 if (skippedUrls[product.url]) continue;
                 if (!hasStarted(product)) continue;
 
-                // 若篩選為「⭐ 我的最愛」，且該項目未加星，則略過
                 var isStarred = window.Favorites ? window.Favorites.isFavItem(product.url) : false;
-                if (currentCity === "fav" && !isStarred) {
+
+                // 若模式為「只抽我的最愛」，非加星項目直接略過
+                if (mode === "fav-only" && !isStarred) {
                     continue;
+                }
+
+                var priority = 0;
+                if (mode === "fav-first" || mode === "fav-only") {
+                    priority = isStarred ? 1 : 0;
                 }
 
                 candidates.push({
@@ -179,7 +203,7 @@
                     storeIndex: s,
                     productIndex: p,
                     isStarred: isStarred,
-                    priority: isStarred ? 1 : 0,
+                    priority: priority,
                     order: candidates.length
                 });
             }
@@ -187,13 +211,15 @@
 
         if (!candidates.length) return null;
 
-        // 依星號最愛優先度排序 (1 > 0)，相同者依預設順序
-        candidates.sort(function (a, b) {
-            if (b.priority !== a.priority) {
-                return b.priority - a.priority;
-            }
-            return a.order - b.order;
-        });
+        if (mode === "fav-first" || mode === "fav-only") {
+            // 依星號最愛優先度排序 (1 > 0)，相同者依預設順序
+            candidates.sort(function (a, b) {
+                if (b.priority !== a.priority) {
+                    return b.priority - a.priority;
+                }
+                return a.order - b.order;
+            });
+        }
 
         return candidates[0];
     }
@@ -210,7 +236,13 @@
 
         var list = filteredStores();
         var candidate = findNextItem();
+        var currentMode = getDrawMode();
         currentItem = candidate;
+
+        // 同步模式按鈕狀態
+        document.querySelectorAll(".draw-mode-btn").forEach(function (btn) {
+            btn.classList.toggle("active", btn.getAttribute("data-mode") === currentMode);
+        });
 
         if (!list.length) {
             progress.textContent = "目前篩選條件下沒有抽選資料";
@@ -223,8 +255,13 @@
         }
 
         if (!candidate) {
-            progress.textContent = "🎉 目前沒有已開始且尚未抽取的項目";
-            storeEl.textContent = "之後開始的項目會在開始時間到達後自動加入連續抽選";
+            if (currentMode === "fav-only") {
+                progress.textContent = "🎉 所有標記 ⭐ 的最愛項目均已抽選完成！";
+                storeEl.textContent = "若要抽選其他項目，請切換至「🌟 優先抽我的最愛」或「📋 全部依序」";
+            } else {
+                progress.textContent = "🎉 目前沒有已開始且尚未抽取的項目";
+                storeEl.textContent = "之後開始的項目會在開始時間到達後自動加入連續抽選";
+            }
             productEl.textContent = "";
             open.disabled = true;
             next.disabled = true;
@@ -305,6 +342,14 @@
         if (nextBtn) nextBtn.onclick = completeAndOpenNext;
         if (skipBtn) skipBtn.onclick = skipCurrent;
 
+        // 綁定連續抽選模式切換按鈕
+        document.querySelectorAll(".draw-mode-btn").forEach(function (btn) {
+            btn.onclick = function () {
+                var mode = btn.getAttribute("data-mode");
+                setDrawMode(mode);
+            };
+        });
+
         // 監聽 Favorites 變更事件自動重繪
         if (window.Favorites) {
             window.Favorites.onChange(function () {
@@ -317,6 +362,8 @@
         init: init,
         render: render,
         setCity: setCityFromTopFilter,
+        setDrawMode: setDrawMode,
+        getDrawMode: getDrawMode,
         syncDrawnRows: syncDrawnRows,
         markDrawn: markDrawn,
         refreshStores: function () {
