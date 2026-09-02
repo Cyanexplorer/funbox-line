@@ -133,9 +133,22 @@
         return !start || new Date() >= start;
     }
 
+    // 取得資料來源：優先採用 Catalog（支援匯入覆蓋），否則回退內建 DRAWS_DATA
+    function dataSource() {
+        if (window.Catalog && typeof window.Catalog.read === "function") {
+            var catalogData = window.Catalog.read();
+            if (Array.isArray(catalogData) && catalogData.length) return catalogData;
+        }
+        if (typeof DRAWS_DATA !== "undefined" && Array.isArray(DRAWS_DATA) && DRAWS_DATA.length) {
+            return DRAWS_DATA;
+        }
+        return [];
+    }
+
     function loadStores() {
-        if (typeof DRAWS_DATA !== "undefined" && Array.isArray(DRAWS_DATA) && DRAWS_DATA.length > 0) {
-            return DRAWS_DATA.map(function (store) {
+        var list = dataSource();
+        if (list.length > 0) {
+            return list.map(function (store) {
                 return {
                     city: store.city,
                     name: store.name,
@@ -382,6 +395,23 @@
             stores = loadStores();
             render();
         }
+    };
+
+    // #僅供單元測試 (internal hooks for node --test / automated verification)
+    ContinuousDraw._test = {
+        getProductStartTime: getProductStartTime,
+        hasStarted: hasStarted,
+        findNextItem: findNextItem,
+        filteredStores: filteredStores,
+        dataSource: dataSource,
+        getStores: function () { return stores; },
+        setStores: function (list) { stores = Array.isArray(list) ? list : []; },
+        getCurrentCity: function () { return currentCity; },
+        setCurrentCity: function (city) { currentCity = city || "all"; },
+        getCurrentItem: function () { return currentItem; },
+        getSkipped: function () { return skippedUrls; },
+        skipUrl: function (url) { if (url) skippedUrls[url] = true; },
+        clearSkipped: function () { skippedUrls = {}; }
     };
 
     window.ContinuousDraw = ContinuousDraw;

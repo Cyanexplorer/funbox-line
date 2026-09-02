@@ -55,6 +55,27 @@
             </div>
         </div>
 
+        <!-- 資料管理：抽獎項目清單 匯入 / 匯出 -->
+        <details class="catalog-toolbar" id="catalogToolbar">
+            <summary>🗂 資料管理：匯入 / 匯出抽獎項目清單（管理員進階功能）</summary>
+            <div class="catalog-toolbar-body">
+                <div class="catalog-source-status" id="catalogSourceStatus">載入資料來源中...</div>
+                <div class="catalog-mode-row">
+                    <span class="catalog-mode-label">匯入模式：</span>
+                    <label><input type="radio" name="catalogImportMode" value="replace" checked="checked" /> 取代全部清單</label>
+                    <label><input type="radio" name="catalogImportMode" value="merge" /> 合併更新（依縣市 + 店名配對）</label>
+                </div>
+                <div class="catalog-btn-row">
+                    <button type="button" class="catalog-btn catalog-btn-import" id="catalogImportBtn">📥 匯入 JSON</button>
+                    <input type="file" id="catalogImportFile" accept=".json,.js,application/json,text/plain" style="display:none;" />
+                    <button type="button" class="catalog-btn" id="catalogExportBtn">📤 匯出 JSON</button>
+                    <button type="button" class="catalog-btn catalog-btn-js" id="catalogExportJsBtn">📄 匯出 draws.js（提交用）</button>
+                    <button type="button" class="catalog-btn catalog-btn-reset" id="catalogResetBtn" style="display:none;">↩ 回復內建資料</button>
+                </div>
+                <div class="catalog-msg" id="catalogMsg"></div>
+            </div>
+        </details>
+
         <!-- 綜合篩選控制箱 (搜尋 + 地區篩選) -->
         <div class="filter-control-box">
             <!-- 搜尋框 -->
@@ -83,6 +104,7 @@
     <!-- 資料與邏輯模組 -->
     <script src="data/stores.js"></script>
     <script src="data/draws.js"></script>
+    <script src="js/catalog.js"></script>
     <script src="js/favorites.js"></script>
     <script src="js/continuous-draw.js"></script>
     <script src="js/app.js"></script>

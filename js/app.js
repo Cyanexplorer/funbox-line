@@ -47,16 +47,27 @@
         grid.innerHTML = cardsHtml;
     }
 
+    // 取得目前有效的抽獎項目清單（優先採用 Catalog 匯入覆蓋，其次內建 DRAWS_DATA）
+    function currentDrawData() {
+        if (window.Catalog && typeof window.Catalog.read === "function") {
+            var catalogData = window.Catalog.read();
+            if (Array.isArray(catalogData) && catalogData.length) return catalogData;
+        }
+        if (typeof DRAWS_DATA !== "undefined" && Array.isArray(DRAWS_DATA)) return DRAWS_DATA;
+        return [];
+    }
+
     // 渲染「抽獎連結」清單區域
     function renderDrawList() {
         var container = $id("drawListContainer");
         var filterGroup = $id("drawFilterBtnGroup");
-        if (!container || typeof DRAWS_DATA === "undefined") return;
+        var data = currentDrawData();
+        if (!container || !data.length) return;
 
         // 統計各縣市門市數量
         var cityStores = {};
-        var totalStores = DRAWS_DATA.length;
-        DRAWS_DATA.forEach(function (store) {
+        var totalStores = data.length;
+        data.forEach(function (store) {
             if (!cityStores[store.city]) cityStores[store.city] = [];
             cityStores[store.city].push(store);
         });
@@ -333,6 +344,146 @@
         }
     }
 
+    /* ===== 資料管理：抽獎項目清單 匯入 / 匯出 ===== */
+
+    // 匯入後整頁重新整理：重繪清單、重新載入連續抽選引擎資料並套用目前篩選
+    function refreshAllViews() {
+        renderDrawList();
+        restoreVisitedStates();
+        if (window.ContinuousDraw && window.ContinuousDraw.refreshStores) {
+            window.ContinuousDraw.refreshStores();
+        }
+        updateCatalogStatus();
+        applyFilters();
+    }
+
+    // 更新「目前資料來源」狀態列
+    function updateCatalogStatus() {
+        var statusEl = $id("catalogSourceStatus");
+        var resetBtn = $id("catalogResetBtn");
+        if (!statusEl) return;
+
+        if (!window.Catalog) {
+            statusEl.innerHTML = "";
+            if (resetBtn) resetBtn.style.display = "none";
+            return;
+        }
+
+        var data = currentDrawData();
+        var itemsCount = data.reduce(function (n, s) {
+            return n + (Array.isArray(s.items) ? s.items.length : 0);
+        }, 0);
+        var isOverride = window.Catalog.hasOverride();
+
+        if (isOverride) {
+            var meta = window.Catalog.readMeta ? window.Catalog.readMeta() : null;
+            var when = meta && meta.importedAt ? new Date(meta.importedAt).toLocaleString("zh-TW") : "";
+            statusEl.innerHTML = '<span class="badge badge-override">已使用「匯入資料」</span>　目前清單：' +
+                data.length + ' 間門市、' + itemsCount + ' 個項目' +
+                (when ? "（匯入於 " + when + "）" : "") +
+                '<div class="catalog-hint">匯入內容僅儲存在此瀏覽器（localStorage），要讓所有訪客看到請點「匯出 draws.js」後更新 GitHub 上的 data/draws.js。</div>';
+        } else {
+            statusEl.innerHTML = '<span class="badge badge-builtin">目前使用內建資料</span>　內建清單：' +
+                data.length + ' 間門市、' + itemsCount + ' 個項目';
+        }
+        if (resetBtn) resetBtn.style.display = isOverride ? "" : "none";
+    }
+
+    function showCatalogMsg(html, isError) {
+        var el = $id("catalogMsg");
+        if (!el) return;
+        el.innerHTML = html;
+        el.className = isError ? "catalog-msg err" : "catalog-msg ok";
+    }
+
+    // 取得目前選取的匯入模式（replace 取代全部 / merge 合併更新）
+    function getCatalogImportMode() {
+        var radios = document.querySelectorAll('input[name="catalogImportMode"]');
+        for (var i = 0; i < radios.length; i++) {
+            if (radios[i].checked) return radios[i].value;
+        }
+        return "replace";
+    }
+
+    function renderImportResult(result) {
+        if (!result) return;
+        var html = "";
+        if (result.ok) {
+            html = "✅ 匯入成功：目前共 " + result.storeCount + " 間門市、" + result.itemsCount + " 個項目";
+            if (result.mode === "merge") {
+                if (result.added.length) html += "；新增 " + result.added.length + " 間（" + result.added.join("、") + "）";
+                if (result.updated.length) html += "；更新 " + result.updated.length + " 間（" + result.updated.join("、") + "）";
+            }
+        } else {
+            html = "❌ 匯入失敗，未變更目前資料：<br/>";
+            if (result.errors && result.errors.length) {
+                html += "<ul class=\"catalog-err-list\">";
+                result.errors.forEach(function (err) {
+                    html += "<li>" + err + "</li>";
+                });
+                html += "</ul>";
+            }
+        }
+        if (result.warnings && result.warnings.length) {
+            html += '<div class="catalog-warn-list">⚠️ 提醒：' + result.warnings.join("；") + "</div>";
+        }
+        showCatalogMsg(html, !result.ok);
+    }
+
+    // 處理使用者選擇的匯入檔案
+    function handleCatalogFile(file) {
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function () {
+            var result = window.Catalog.importFromText(reader.result, getCatalogImportMode());
+            renderImportResult(result);
+        };
+        reader.onerror = function () {
+            showCatalogMsg("讀取檔案失敗，請重試", true);
+        };
+        reader.readAsText(file);
+    }
+
+    // 綁定資料管理工具列事件
+    function bindCatalogControls() {
+        if (!window.Catalog) return;
+        var importBtn = $id("catalogImportBtn");
+        var importFile = $id("catalogImportFile");
+        var exportBtn = $id("catalogExportBtn");
+        var exportJsBtn = $id("catalogExportJsBtn");
+        var resetBtn = $id("catalogResetBtn");
+
+        if (importBtn && importFile) {
+            importBtn.onclick = function () { importFile.click(); };
+            importFile.onchange = function () {
+                if (importFile.files && importFile.files.length) {
+                    handleCatalogFile(importFile.files[0]);
+                }
+                importFile.value = "";
+            };
+        }
+        if (exportBtn) {
+            exportBtn.onclick = function () {
+                window.Catalog.download("funbox-draws-data.json", window.Catalog.exportText(), "application/json");
+            };
+        }
+        if (exportJsBtn) {
+            exportJsBtn.onclick = function () {
+                window.Catalog.download("draws.js", window.Catalog.exportDrawsJsText(), "application/javascript");
+            };
+        }
+        if (resetBtn) {
+            resetBtn.onclick = function () {
+                window.Catalog.clearOverride();
+                showCatalogMsg("已回復為內建資料。", false);
+            };
+        }
+
+        // 資料變更（匯入 / 回復）後由這裡統一刷新畫面
+        window.Catalog.onChange(refreshAllViews);
+        updateCatalogStatus();
+    }
+
     function init() {
         renderStoreFriends();
         renderDrawList();
@@ -348,6 +499,7 @@
             window.ContinuousDraw.init();
         }
 
+        bindCatalogControls();
         showPage("draws", document.querySelectorAll(".page-tab")[0]);
         applyFilters();
     }
@@ -361,7 +513,8 @@
         resetFilters: resetFilters,
         markStoreVisited: markStoreVisited,
         markDrawVisited: markDrawVisited,
-        toggleFavItem: toggleFavItem
+        toggleFavItem: toggleFavItem,
+        refreshData: refreshAllViews
     };
 
     if (document.readyState === "loading") {
