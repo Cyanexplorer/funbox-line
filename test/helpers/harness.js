@@ -144,6 +144,7 @@ function bootApp(opts) {
     });
     loadModules(ctx, [
         "js/catalog.js",
+        "js/geo.js",
         "js/favorites.js",
         "js/continuous-draw.js",
         "js/app.js"

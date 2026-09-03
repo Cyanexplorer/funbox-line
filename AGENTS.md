@@ -30,6 +30,7 @@ css/style.css              One global stylesheet incl. a <600px mobile media que
 data/stores.js             const STORE_FRIENDS_DATA — 76 LINE store accounts.
 data/draws.js              const DRAWS_DATA — 45 stores / 327 giveaway items (2026/09/04 campaign).
 js/catalog.js              Catalog manager: import/export/override of DRAWS_DATA.
+js/geo.js                  Geo helpers: Haversine distance + 由近而遠 store comparator.
 js/favorites.js            Favorites (⭐ 我的最愛) module, LocalStorage-backed.
 js/continuous-draw.js      Continuous-draw engine (mode/ordering/start-time logic).
 js/app.js                  App manager: rendering, tabs, filtering, visited marks.
@@ -62,6 +63,8 @@ bootstraps the UI on `DOMContentLoaded` (or immediately if already loaded).
 {
   city:      "台北市",                     // filter group key
   name:      "Fun box忠孝SOGO",            // store display name
+  lat:       25.04210,                     // approx store coords for 📡 由近而遠 sort
+  lng:       121.54489,                    // may be approximate — review when editing data
   startTime: "抽選時間：2026/08/28~2026/08/29", // free-text human label only
   items: [
     {
@@ -79,7 +82,10 @@ city list from the data, so no other file needs touching for new content. Keep
 `id` values unique and URL-safe and keep `link` values unique per item (they are
 used as favorite/drawn map keys). Product names may carry a scheduled start-time
 annotation like `（8/29 11:00才開始）` / `（8/29 11:00開始）` / `(8/29 11:00才開始)`
-— see start-time parsing below.
+— see start-time parsing below. Store objects carry `lat`/`lng` (approximate,
+geocoded from the hosting mall; user-reviewed list is the `data/draws.js` header
+comment + geo-sort feature) — keep them present and sane whenever a store is
+added or the campaign is re-imported, or distance sorting silently degrades.
 
 ## Module Architecture
 
@@ -99,7 +105,8 @@ double quotes, 4-space indentation, semicolons, and zh-TW comments.
 - Reads the item list through `Catalog.read()` (with a `DRAWS_DATA` fallback), so
   an imported override renders everywhere the draws list appears.
 - Public API: `init, showPage, filterDrawRegion, filterStoreRegion, resetFilters,
-  markStoreVisited, markDrawVisited, toggleFavItem, refreshData`.
+  markStoreVisited, markDrawVisited, toggleFavItem, refreshData, enableGeoSort,
+  disableGeoSort, isGeoActive`.
 
 ### `window.Favorites` (js/favorites.js) — ⭐ starred items
 
@@ -121,8 +128,11 @@ double quotes, 4-space indentation, semicolons, and zh-TW comments.
 - `findNextItem()` picks the next eligible product: not in the drawn map, not in
   the in-memory `skippedUrls` set, and **already started** (start-time gate),
   across the currently filtered city list.
-- Public API: `init, render, setCity, setDrawMode, getDrawMode, syncDrawnRows,
-  markDrawn, unmarkDrawn, resetDrawn, refreshStores`.
+- Public API: `init, render, setCity, setDrawMode, getDrawMode, setGeoLocation,
+  syncDrawnRows, markDrawn, unmarkDrawn, resetDrawn, refreshStores`.
+- `setGeoLocation(lat, lng)` (or nulls to clear) makes candidate order
+  **由近而遠** using each store's `lat/lng`; engine store objects carry lat/lng
+  copied from the catalog in `loadStores()`.
 - `ContinuousDraw._test` exposes read-only internals for the unit tests
   (time parsing, candidate selection, skip state, data source) — keep it in sync
   when renaming internals, and do not rely on it from page code.
@@ -200,6 +210,21 @@ current month), bumps the year by one when the resulting time is in the past
 **and** the announced month is ≥ 6 months earlier than the current month.
 `hasStarted(product)` returns true when no start time is found **or** now ≥ start.
 Not-yet-started items are excluded from continuous draw until they start.
+
+### `window.Geo` (js/geo.js) & 📡 由近而遠 sorting
+
+- `Geo.distanceMeters(lat1, lng1, lat2, lng2)` (Haversine) and
+  `Geo.nearestCompare(lat, lng)` → stable comparator sorting store-like objects
+  `{lat, lng}` nearest-first; objects without numeric coords sort last.
+- UI: 「📡 由近而遠排序」button (`#geoSortBtn`) in the filter box. Clicking
+  requests `navigator.geolocation` permission, then calls
+  `App.enableGeoSort(lat, lng)` (denied/unsupported → friendly message, order
+  unchanged); clicking again calls `App.disableGeoSort()`. Location is never
+  persisted.
+- When active, both the rendered draws list and the continuous-draw candidate
+  order become distance-sorted (city headers are kept; products keep original
+  order). Engine orders via `ContinuousDraw.setGeoLocation(lat, lng)` +
+  `orderedStores()`; its `loadStores()` copies `lat/lng` from the catalog.
 
 ## Persistence & UI state (localStorage keys)
 

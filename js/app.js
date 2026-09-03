@@ -9,6 +9,9 @@
     var currentDrawRegion = "all";
     var currentStoreRegion = "all";
     var currentKeyword = "";
+    var geoEnabled = false; // 由近而遠排序是否開啟
+    var geoLat = null;      // 使用者目前緯度
+    var geoLng = null;      // 使用者目前經度
 
     function $id(id) { return document.getElementById(id); }
 
@@ -57,11 +60,21 @@
         return [];
     }
 
+    // 開啟「由近而遠」時，回傳依距離排序過的清單；否則回傳原始順序
+    function effectiveDrawData() {
+        var data = currentDrawData();
+        if (geoEnabled && typeof geoLat === "number" && typeof geoLng === "number" &&
+                window.Geo && window.Geo.nearestCompare) {
+            return data.slice().sort(window.Geo.nearestCompare(geoLat, geoLng));
+        }
+        return data;
+    }
+
     // 渲染「抽獎連結」清單區域
     function renderDrawList() {
         var container = $id("drawListContainer");
         var filterGroup = $id("drawFilterBtnGroup");
-        var data = currentDrawData();
+        var data = effectiveDrawData();
         if (!container || !data.length) return;
 
         // 統計各縣市門市數量
@@ -484,6 +497,85 @@
         updateCatalogStatus();
     }
 
+    /* ===== 📡 依地理位置（由近而遠）排序 ===== */
+
+    function isGeoActive() {
+        return geoEnabled && typeof geoLat === "number" && typeof geoLng === "number";
+    }
+
+    // 開啟：給定使用者座標（由瀏覽器定位取得；測試可直接呼叫 enableGeoSort）
+    function enableGeoSort(lat, lng) {
+        if (typeof lat !== "number" || typeof lng !== "number") return;
+        geoEnabled = true;
+        geoLat = lat;
+        geoLng = lng;
+        if (window.ContinuousDraw && window.ContinuousDraw.setGeoLocation) {
+            window.ContinuousDraw.setGeoLocation(lat, lng);
+        }
+        updateGeoUI();
+        refreshAllViews();
+    }
+
+    // 關閉：回復原本（資料檔）順序
+    function disableGeoSort() {
+        geoEnabled = false;
+        geoLat = null;
+        geoLng = null;
+        if (window.ContinuousDraw && window.ContinuousDraw.setGeoLocation) {
+            window.ContinuousDraw.setGeoLocation(null, null);
+        }
+        updateGeoUI();
+        refreshAllViews();
+    }
+
+    // 更新排序按鈕與狀態列
+    function updateGeoUI() {
+        var btn = $id("geoSortBtn");
+        var statusEl = $id("geoSortStatus");
+        if (btn) {
+            btn.classList.toggle("active", geoEnabled);
+        }
+        if (!statusEl) return;
+        if (!isGeoActive()) {
+            statusEl.innerHTML = "點擊後需允許瀏覽器定位，門市將依距離由近而遠排列";
+            return;
+        }
+        var nearest = effectiveDrawData()[0];
+        if (nearest && window.Geo && typeof nearest.lat === "number") {
+            var km = window.Geo.distanceMeters(geoLat, geoLng, nearest.lat, nearest.lng) / 1000;
+            statusEl.innerHTML = "已開啟：離你最近「" + nearest.name + "」約 " + km.toFixed(1) + " 公里（再點一次關閉）";
+        } else {
+            statusEl.innerHTML = "已開啟由近而遠排序（再點一次關閉）";
+        }
+    }
+
+    // 按鈕點擊：開啟時要求定位；開啟中再點一次即關閉
+    function askGeoPermission() {
+        if (geoEnabled) {
+            disableGeoSort();
+            return;
+        }
+        if (typeof navigator === "undefined" || !navigator.geolocation) {
+            var statusEl = $id("geoSortStatus");
+            if (statusEl) statusEl.innerHTML = "此瀏覽器不支援定位，無法依距離排序";
+            return;
+        }
+        var statusEl = $id("geoSortStatus");
+        if (statusEl) statusEl.innerHTML = "正在取得位置…";
+        navigator.geolocation.getCurrentPosition(function (position) {
+            enableGeoSort(position.coords.latitude, position.coords.longitude);
+        }, function () {
+            geoEnabled = false;
+            if (statusEl) statusEl.innerHTML = "無法取得定位（權限被拒或逾時），維持原順序";
+        }, { timeout: 10000, maximumAge: 300000 });
+    }
+
+    function bindGeoControls() {
+        var btn = $id("geoSortBtn");
+        if (btn) btn.onclick = askGeoPermission;
+        updateGeoUI();
+    }
+
     function init() {
         renderStoreFriends();
         renderDrawList();
@@ -500,6 +592,7 @@
         }
 
         bindCatalogControls();
+        bindGeoControls();
         showPage("draws", document.querySelectorAll(".page-tab")[0]);
         applyFilters();
     }
@@ -514,7 +607,10 @@
         markStoreVisited: markStoreVisited,
         markDrawVisited: markDrawVisited,
         toggleFavItem: toggleFavItem,
-        refreshData: refreshAllViews
+        refreshData: refreshAllViews,
+        enableGeoSort: enableGeoSort,
+        disableGeoSort: disableGeoSort,
+        isGeoActive: isGeoActive
     };
 
     if (document.readyState === "loading") {

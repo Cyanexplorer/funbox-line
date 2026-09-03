@@ -13,6 +13,8 @@
     var currentCity = "all";
     var currentItem = null;
     var skippedUrls = {};
+    var geoLat = null;
+    var geoLng = null;
 
     function $id(id) { return document.getElementById(id); }
 
@@ -152,6 +154,8 @@
                 return {
                     city: store.city,
                     name: store.name,
+                    lat: (typeof store.lat === "number") ? store.lat : null,
+                    lng: (typeof store.lng === "number") ? store.lng : null,
                     startTime: store.startTime,
                     products: store.items.map(function (item) {
                         return {
@@ -174,11 +178,31 @@
     }
 
     /**
+     * 設定使用者目前位置；設定後抽選順序會「由近而遠」。
+     * 傳入 null / 非數字則回到原本（資料檔）順序。
+     */
+    function setGeoLocation(lat, lng) {
+        var has = (typeof lat === "number" && typeof lng === "number");
+        geoLat = has ? lat : null;
+        geoLng = has ? lng : null;
+        render();
+    }
+
+    /** 依目前順序（資料順序 或 由近而遠）取得要走的門市清單 */
+    function orderedStores() {
+        var list = filteredStores();
+        if (geoLat !== null && typeof window.Geo !== "undefined" && window.Geo.nearestCompare) {
+            return list.slice().sort(window.Geo.nearestCompare(geoLat, geoLng));
+        }
+        return list;
+    }
+
+    /**
      * 從目前縣市中，找「尚未抽 + 已經開始」的商品
      * 支援最愛優先排序
      */
     function findNextItem() {
-        var list = filteredStores();
+        var list = orderedStores();
         var mode = getDrawMode();
         var candidates = [];
 
@@ -387,6 +411,7 @@
         setCity: setCityFromTopFilter,
         setDrawMode: setDrawMode,
         getDrawMode: getDrawMode,
+        setGeoLocation: setGeoLocation,
         syncDrawnRows: syncDrawnRows,
         markDrawn: markDrawn,
         unmarkDrawn: unmarkDrawn,
@@ -408,6 +433,7 @@
         setStores: function (list) { stores = Array.isArray(list) ? list : []; },
         getCurrentCity: function () { return currentCity; },
         setCurrentCity: function (city) { currentCity = city || "all"; },
+        getGeoLocation: function () { return { lat: geoLat, lng: geoLng }; },
         getCurrentItem: function () { return currentItem; },
         getSkipped: function () { return skippedUrls; },
         skipUrl: function (url) { if (url) skippedUrls[url] = true; },

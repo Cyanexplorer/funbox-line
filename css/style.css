@@ -954,3 +954,56 @@ p.subtitle {
         font-size: 12px;
     }
 }
+
+/* ===== 📡 依地理位置（由近而遠）排序 ===== */
+.geo-sort-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border-light);
+    flex-wrap: wrap;
+}
+
+.geo-sort-btn {
+    padding: 7px 14px;
+    border-radius: 16px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #1e293b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.geo-sort-btn:hover {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.geo-sort-btn.active {
+    background: #0ea5e9;
+    border-color: #0ea5e9;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(14, 165, 233, 0.35);
+}
+
+.geo-sort-status {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+@media (max-width: 600px) {
+    .geo-sort-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .geo-sort-status {
+        font-size: 11px;
+    }
+}
