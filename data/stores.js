@@ -533,13 +533,6 @@ const STORE_FRIENDS_DATA = [
     "lineId": "@438glrqv",
     "id": "438glrqv",
     "link": "https://line.me/ti/p/~@438glrqv"
-  },
-  {
-    "region": "台東縣",
-    "name": "台東秀泰",
-    "lineId": "@438glrqv",
-    "id": "438glrqv",
-    "link": "https://line.me/R/ti/p/@438glrqv"
   }
 ];
 
