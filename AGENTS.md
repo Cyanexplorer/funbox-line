@@ -27,8 +27,8 @@ All data is **hand-curated arrays** in `data/*.js`. All persistence is
 ```
 index.html                 Single page; both views are plain divs toggled by JS.
 css/style.css              One global stylesheet incl. a <600px mobile media query.
-data/stores.js             const STORE_FRIENDS_DATA — 77 LINE store accounts.
-data/draws.js              const DRAWS_DATA — 76 stores / 864 giveaway items.
+data/stores.js             const STORE_FRIENDS_DATA — 76 LINE store accounts.
+data/draws.js              const DRAWS_DATA — 45 stores / 327 giveaway items (2026/09/04 campaign).
 js/catalog.js              Catalog manager: import/export/override of DRAWS_DATA.
 js/favorites.js            Favorites (⭐ 我的最愛) module, LocalStorage-backed.
 js/continuous-draw.js      Continuous-draw engine (mode/ordering/start-time logic).
@@ -156,6 +156,35 @@ for all visitors you must export `draws.js` and commit the result over
 `data/draws.js` (or edit the data file directly). This matches the GitHub Pages
 static-hosting model.
 
+**正確用途（tool purpose — read before changing anything catalog-related）:**
+This toolbar is a *campaign rotation / maintenance workflow*, not a one-off
+gimmick. It will be reused every time a new giveaway campaign ships. The visitor
+page is **only** rendered from the data files `index.html` actually loads:
+`data/draws.js` and `data/stores.js`. The correct update loop is:
+
+1. Obtain the new item list (JSON array, `{ stores: [...] }`, or `draws.js` text).
+2. Use **📥 匯入 JSON** in the toolbar to preview/validate it locally (the
+   override lives only in that browser's `localStorage` — never ship this as the
+   update).
+3. Use **📄 匯出 draws.js（提交用）** to generate the exact
+   `const DRAWS_DATA = [...]` source, overwrite `data/draws.js` in the repo,
+   commit, and push.
+4. Wait for the GitHub Page rebuild, verify the **deployed copy equals the
+   committed file** (curl the Pages URL, compare), then hard-refresh.
+
+Hard rules learned from a real mistake (never repeat):
+
+- A file the page does **not** load (e.g. `data/line-links.js`, any reference
+  dump) is **invisible to visitors** — never report it as "the page is updated".
+- "Syncing the list from another page/site" (e.g. scraping
+  `uxux11.github.io/funbox-line`) means **regenerating `data/draws.js` /
+  `data/stores.js` themselves** from that source and committing (see commit
+  `6bd29db` for the canonical example), never dropping scraped data into a
+  sidecar file.
+- Always answer "did the page update?" by comparing the *deployed static files*
+  against the repo files, then tell the user to hard-refresh (Pages caches
+  assets).
+
 ### Start-time parsing (schedule gating)
 
 `getProductStartTime(productText)` scans the product name for a parenthesized
@@ -278,8 +307,11 @@ state in mind when re-testing (use the reset buttons or clear site data).
 
 ## Git Workflow
 
-- Active branch: `feature/modular-favorites` (2 commits ahead of `main`);
-  remotes: `origin git@github.com:Cyanexplorer/funbox-line.git`.
+- Active branch: `feature/modular-favorites`; `origin` is the Cyanexplorer fork of
+  `UXUX11/funbox-line` (`origin git@github.com:Cyanexplorer/funbox-line.git`).
+  `feature/modular-favorites` has diverged from `main` and is the branch the
+  fork's GitHub Page deploys from (verify with `git rev-list --left-right --count
+  main...origin/feature/modular-favorites` before assuming ancestry).
 - Commit messages use Conventional-Commits-style prefixes seen in history:
   `feat:`, `fix:`, `refactor:`, `style:`, `chore:`, and describe behavior in
   English while code/UI stays zh-TW. Follow the same style for new commits.
